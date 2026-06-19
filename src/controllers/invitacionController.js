@@ -19,7 +19,7 @@ const create = async (req, res) => {
       asociacion_id,
       email_invitado,
       rol_invitado,
-      creadorId
+      creadorId,
     );
 
     // Enviar email con el token de invitación

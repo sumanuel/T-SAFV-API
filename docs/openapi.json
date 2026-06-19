@@ -12,9 +12,15 @@
     },
     "/api/auth/login": { "post": { "summary": "Login (JWT)" } },
     "/api/asociaciones": { "post": { "summary": "Crear asociación (auth)" } },
-    "/api/invitaciones": { "post": { "summary": "Crear invitación (asoc admin)" } },
-    "/api/invitaciones/respond": { "post": { "summary": "Aceptar invitación" } },
+    "/api/invitaciones": {
+      "post": { "summary": "Crear invitación (asoc admin)" }
+    },
+    "/api/invitaciones/respond": {
+      "post": { "summary": "Aceptar invitación" }
+    },
     "/api/unidades": { "post": { "summary": "Crear unidad" } },
-    "/api/asociaciones/{asociacion_id}/membresias/{membresia_id}/state": { "post": { "summary": "Cambiar estado de membresía" } }
+    "/api/asociaciones/{asociacion_id}/membresias/{membresia_id}/state": {
+      "post": { "summary": "Cambiar estado de membresía" }
+    }
   }
 }
