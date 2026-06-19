@@ -12,8 +12,17 @@ const membresiaRoutes = require("./src/routes/membresiaRoutes");
 
 const app = express();
 
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+
+// Security middlewares
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+// Basic rate limiter: 100 requests per 15 minutes per IP
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+app.use(limiter);
 
 app.get("/", (req, res) => {
   res.send("T-SAFV API is running!");

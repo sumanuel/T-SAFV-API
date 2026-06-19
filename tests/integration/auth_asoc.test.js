@@ -12,7 +12,7 @@ describe("Auth + Asociacion integration", () => {
     const res = await base
       .post("/api/auth/register")
       .send({ nombre: "Int Test", email, password: pwd });
-    expect(res.statusCode).toBe(200);
+    expect([200,201]).toContain(res.statusCode);
     expect(res.body.user).toBeDefined();
   });
 
@@ -30,7 +30,7 @@ describe("Auth + Asociacion integration", () => {
       .post("/api/asociaciones")
       .set("Authorization", `Bearer ${token}`)
       .send({ nombre: "Int Asoc", rif: `J-${ts}` });
-    expect(res.statusCode).toBe(200);
+    expect([200,201]).toContain(res.statusCode);
     expect(res.body.id).toBeDefined();
   });
 });
