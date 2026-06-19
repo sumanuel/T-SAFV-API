@@ -1,0 +1,191 @@
+{
+  "info": {
+    "name": "T-SAFV API - Collection",
+    "_postman_id": "t-safv-collection",
+    "description": "Colección mínima para integrar la APP",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "authToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Usuario\",\n  \"email\": \"user@example.com\",\n  \"password\": \"secret\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"secret\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Create Association",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/asociaciones",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asociaciones"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Mi Asociacion\",\n  \"rif\": \"J-12345678-9\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Create Invitation",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/invitaciones",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invitaciones"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"asociacion_id\": 1,\n  \"email_invitado\": \"invitee@example.com\",\n  \"rol_invitado\": \"PROPIETARIO\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Accept Invitation",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/invitaciones/respond",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invitaciones", "respond"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"PUT_TOKEN_HERE\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Create Unit",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/unidades",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "unidades"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"asociacion_id\": 1,\n  \"propietario_id\": 2,\n  \"placa\": \"ABC123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Change Unit State",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/unidades/1/state",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "unidades", "1", "state"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"INACTIVO\",\n  \"motivo\": \"Por revisión\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Change Membership State",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/asociaciones/1/membresias/1/state",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asociaciones", "1", "membresias", "1", "state"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"INACTIVO\",\n  \"motivo\": \"Sanción\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Create Fiscal Record",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/fiscal/registros",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "fiscal", "registros"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"unidad_id\": 1,\n  \"asociacion_id\": 1,\n  \"chofer\": \"Juan\",\n  \"destino\": \"Centro\",\n  \"pasajeros\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "Export Members (Excel)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/export/asociaciones/1/miembros",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "export", "asociaciones", "1", "miembros"]
+        }
+      }
+    }
+  ]
+}
