@@ -8,6 +8,7 @@ const invitacionRoutes = require("./src/routes/invitacionRoutes");
 const propietarioRoutes = require("./src/routes/propietarioRoutes");
 const fiscalRoutes = require("./src/routes/fiscalRoutes");
 const exportRoutes = require("./src/routes/exportRoutes");
+const membresiaRoutes = require("./src/routes/membresiaRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/invitaciones", invitacionRoutes);
 app.use("/api/propietario", propietarioRoutes);
 app.use("/api/fiscal", fiscalRoutes);
 app.use("/api/export", exportRoutes);
+app.use("/api", membresiaRoutes);
 
 const PORT = process.env.PORT || 3000;
 
