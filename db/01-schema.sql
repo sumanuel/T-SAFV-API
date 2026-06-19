@@ -142,4 +142,4 @@ CREATE INDEX IF NOT EXISTS idx_historial_estados_entidad ON historial_estados(en
 CREATE INDEX IF NOT EXISTS idx_registros_unidad_fecha ON registros_fiscalizacion(unidad_id, fecha_hora_registro DESC);
 CREATE INDEX IF NOT EXISTS idx_registros_asociacion_fecha ON registros_fiscalizacion(asociacion_id, fecha_hora_registro DESC);
 
--- Fin del script
+-- Fin del script --

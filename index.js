@@ -4,6 +4,10 @@ const cors = require("cors");
 const authRoutes = require("./src/routes/authRoutes");
 const unidadRoutes = require("./src/routes/unidadRoutes");
 const asociacionRoutes = require("./src/routes/asociacionRoutes");
+const invitacionRoutes = require("./src/routes/invitacionRoutes");
+const propietarioRoutes = require("./src/routes/propietarioRoutes");
+const fiscalRoutes = require("./src/routes/fiscalRoutes");
+const exportRoutes = require("./src/routes/exportRoutes");
 
 const app = express();
 
@@ -17,6 +21,10 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/unidades", unidadRoutes);
 app.use("/api/asociaciones", asociacionRoutes);
+app.use("/api/invitaciones", invitacionRoutes);
+app.use("/api/propietario", propietarioRoutes);
+app.use("/api/fiscal", fiscalRoutes);
+app.use("/api/export", exportRoutes);
 
 const PORT = process.env.PORT || 3000;
 

@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-19
+
+### Added
+
+- **Registro de nuevas rutas**: Se registran en `index.js` las rutas para invitaciones, propietario, fiscal y export (`/api/invitaciones`, `/api/propietario`, `/api/fiscal`, `/api/export`).
+- **Módulos completos**: Se añaden `invitacionModel`, `invitacionController`, `invitacionRoutes`, `propietarioModel`, `propietarioController`, `propietarioRoutes`, `fiscalModel`, `fiscalController`, `fiscalRoutes`, `exportModel`, `exportController`, `exportRoutes`.
+- **Soporte para exportación Excel**: Implementación inicial de exportación a Excel usando `exceljs` (exportar miembros, unidades y trazabilidad).
+
+### Changed
+
+- **`authMiddleware`**: Se amplía con verificadores de rol basados en BD: `isAsociacionAdmin`, `isPropietario`, `isFiscal`.
+
+## [0.8.0] - 2026-06-19
+
+### Added
+
+- **Exportación**: Controladores para generar archivos `.xlsx` en memoria y enviarlos como attachment.
+
+## [0.7.0] - 2026-06-19
+
+### Added
+
+- **Fiscalizaciones**: Endpoints para listar unidades activas por asociación y crear registros de fiscalización (`registros_fiscalizacion`).
+
+## [0.6.0] - 2026-06-19
+
+### Added
+
+- **Propietarios**: Endpoints para que un propietario liste sus unidades y consulte la trazabilidad de una unidad.
+
+## [0.5.0] - 2026-06-19
+
+### Added
+
+- **Sistema de Invitaciones**: Modelo y endpoints para crear invitaciones, listar invitaciones pendientes por email y aceptar invitaciones (crea `membresia` y entrada en `historial_estados`).
+
+## [0.4.0] - 2026-06-19
+
+### Added
+
+- **Middlewares de rol por asociación**: Implementación de verificación de rol en asociación respaldada por la tabla `membresias` y `historial_estados`.
+
 ## [0.3.0] - 2026-06-19
 
 ### Added
