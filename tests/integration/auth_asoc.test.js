@@ -1,7 +1,6 @@
 const request = require("supertest");
-
-// These integration tests expect the API to be running on localhost:3000
-const base = request("http://localhost:3000");
+const app = require("../../index");
+const base = request(app);
 const ts = Date.now();
 const email = `int_test_${ts}@example.com`;
 const pwd = "Secret123!";

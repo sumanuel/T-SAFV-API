@@ -19,6 +19,8 @@ const helmet = require("helmet");
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+const sanitize = require("./src/middlewares/sanitize");
+app.use(sanitize);
 
 // Basic rate limiter: 100 requests per 15 minutes per IP
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
@@ -44,6 +46,10 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

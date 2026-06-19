@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "migrate": "node scripts/run_migrations.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
     "express-rate-limit": "^6.10.0",
     "helmet": "^6.0.1",
     "xss-clean": "^0.1.1",
+    "xss": "^1.0.14",
     "express-mongo-sanitize": "^2.2.0"
   },
   "devDependencies": {

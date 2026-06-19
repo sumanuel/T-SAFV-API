@@ -1,5 +1,6 @@
 const request = require("supertest");
-const base = request("http://localhost:3000");
+const app = require("../../index");
+const base = request(app);
 const ts = Date.now();
 const adminEmail = `invite_admin_${ts}@example.com`;
 const invitedEmail = `invite_user_${ts}@example.com`;
