@@ -1,4 +1,5 @@
 const { Pool } = require("pg");
+const fs = require("fs");
 require("dotenv").config();
 
 let connectionString = process.env.DATABASE_URL || "";
@@ -24,11 +25,33 @@ const poolConfig = {
 
 // Enable SSL by default (for production). Allow disabling with PGSSL=false|0|no
 if (pgsslEnabled) {
-  poolConfig.ssl = {
-    // For development with self-signed certs it's convenient to set rejectUnauthorized:false.
-    // In production use a proper CA and consider setting this to true and providing sslrootcert.
-    rejectUnauthorized: false,
-  };
+  // If a root CA path is provided via PG_SSL_ROOT_CERT or via PG_CONNECTION_OPTIONS (sslrootcert),
+  // read it and use strict verification.
+  let rootCertPath = process.env.PG_SSL_ROOT_CERT;
+  if (!rootCertPath && process.env.PG_CONNECTION_OPTIONS) {
+    try {
+      // PG_CONNECTION_OPTIONS may be in the form 'sslrootcert=/path/ca.pem&other=val' or prefixed with '?'
+      const opts = process.env.PG_CONNECTION_OPTIONS.replace(/^\?/, "");
+      const qp = new URLSearchParams(opts);
+      if (qp.has("sslrootcert")) rootCertPath = qp.get("sslrootcert");
+    } catch (e) {
+      // ignore parsing errors and proceed
+    }
+  }
+
+  if (rootCertPath && fs.existsSync(rootCertPath)) {
+    try {
+      const ca = fs.readFileSync(rootCertPath).toString();
+      poolConfig.ssl = { ca, rejectUnauthorized: true };
+    } catch (e) {
+      // Fallback to permissive SSL if reading fails
+      console.error("Failed to read PG_SSL_ROOT_CERT:", e.message);
+      poolConfig.ssl = { rejectUnauthorized: false };
+    }
+  } else {
+    // No CA provided: keep permissive behavior for development convenience.
+    poolConfig.ssl = { rejectUnauthorized: false };
+  }
 }
 
 const pool = new Pool(poolConfig);

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`authMiddleware`**: Se amplía con verificadores de rol basados en BD: `isAsociacionAdmin`, `isPropietario`, `isFiscal`.
 
+### Security / Config
+
+- **DB SSL config**: `PGSSL` ahora es `true` por defecto y la configuración puede usar `PG_SSL_ROOT_CERT` para proporcionar un CA PEM. El cliente acepta `PGSSL=false|0|no` para desactivar SSL en desarrollo.
+
 ## [0.8.0] - 2026-06-19
 
 ### Added
