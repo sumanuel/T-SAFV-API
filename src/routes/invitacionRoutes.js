@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body, validationResult } = require("express-validator");
 const invitacionController = require("../controllers/invitacionController");
 const {
   authMiddleware,
@@ -11,7 +12,15 @@ router.post(
   "/",
   authMiddleware,
   isAsociacionAdmin,
-  invitacionController.create,
+  body("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  body("email_invitado").isEmail().withMessage("email_invitado must be a valid email"),
+  body("rol_invitado").isIn(["ADMIN", "FISCAL", "PROPIETARIO"]).withMessage("Invalid role"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
+  invitacionController.create
 );
 
 // Listar invitaciones pendientes para el usuario autenticado

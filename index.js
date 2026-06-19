@@ -28,6 +28,11 @@ app.use("/api/fiscal", fiscalRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api", membresiaRoutes);
 
+const errorHandler = require("./src/middlewares/errorHandler");
+
+// middleware final para manejo de errores
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

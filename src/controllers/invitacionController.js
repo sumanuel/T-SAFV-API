@@ -1,4 +1,13 @@
 const invitacionModel = require("../models/invitacionModel");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const create = async (req, res) => {
   const { asociacion_id, email_invitado, rol_invitado } = req.body;
@@ -10,10 +19,26 @@ const create = async (req, res) => {
       asociacion_id,
       email_invitado,
       rol_invitado,
-      creadorId,
+      creadorId
     );
-    // TODO: enviar email real. Por ahora, devolver token en la respuesta (o loggear)
-    console.log("Invitation token:", invitacion.token_invitacion);
+
+    // Enviar email con el token de invitación
+    const appUrl = process.env.APP_URL || "http://localhost:19006";
+    const acceptUrl = `${appUrl}/invitacion/aceptar?token=${invitacion.token_invitacion}`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email_invitado,
+      subject: `Invitación para unirse a la asociación ${asociacion_id}`,
+      text: `Has sido invitado a unirte a la asociación. Usa este enlace para aceptar: ${acceptUrl}`,
+      html: `<p>Has sido invitado a unirte a la asociación.</p><p>Haz clic <a href="${acceptUrl}">aquí</a> para aceptar la invitación.</p>`,
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) console.error("Error sending invitation email:", err);
+      else console.log("Invitation email sent:", info.response);
+    });
+
     res.status(201).json(invitacion);
   } catch (error) {
     res
