@@ -60,13 +60,14 @@ const acceptInvitation = async (token, userId) => {
     );
     const membresia = membresiaRes.rows[0];
 
-    await client.query(
-      "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5)",
+    const histRes = await client.query(
+      "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [membresia.id, "MEMBRESIA", "ACTIVO", "Aceptación de invitación", userId],
     );
 
     await client.query("COMMIT");
-    return { invitacion, membresia };
+    const historial = histRes.rows[0];
+    return { invitacion, membresia, historial };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
