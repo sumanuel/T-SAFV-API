@@ -2,8 +2,25 @@ const pool = require("../config/database");
 
 const getMiembrosByAsociacion = async (asociacion_id) => {
   const res = await pool.query(
-    `SELECT u.id, u.nombre, u.email, m.rol FROM usuarios u
+    `SELECT
+       u.id,
+       u.nombre,
+       u.email,
+       u.telefono,
+       u.rif_cedula,
+       u.direccion,
+       m.id AS membresia_id,
+       m.rol,
+       COALESCE(he.estado, 'ACTIVO') AS estado_membresia
+     FROM usuarios u
      JOIN membresias m ON m.usuario_id = u.id
+     LEFT JOIN LATERAL (
+       SELECT estado
+       FROM historial_estados
+       WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) he ON true
      WHERE m.asociacion_id = $1`,
     [asociacion_id],
   );
@@ -12,7 +29,13 @@ const getMiembrosByAsociacion = async (asociacion_id) => {
 
 const getUnidadesByAsociacion = async (asociacion_id) => {
   const res = await pool.query(
-    `SELECT u.*, he.estado as ultimo_estado FROM unidades_transporte u
+    `SELECT
+       u.*,
+       he.estado as ultimo_estado,
+       owner.nombre AS propietario_nombre,
+       owner.email AS propietario_email
+     FROM unidades_transporte u
+     LEFT JOIN usuarios owner ON owner.id = u.propietario_id
      LEFT JOIN (
        SELECT DISTINCT ON (entidad_id) entidad_id, estado
        FROM historial_estados

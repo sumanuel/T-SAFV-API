@@ -17,6 +17,9 @@ router.post(
   body("password")
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
+  body("telefono").optional().isString(),
+  body("rif_cedula").optional().isString(),
+  body("direccion").optional().isString(),
   validate,
   authController.register,
 );

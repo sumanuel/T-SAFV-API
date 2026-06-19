@@ -29,12 +29,19 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-// Verifica que el usuario tenga cierto rol en la asociación indicada
-const verifyRoleInAssociation = async (usuarioId, asociacionId, role) => {
-  const membRes = await pool.query(
-    "SELECT id, rol FROM membresias WHERE usuario_id = $1 AND asociacion_id = $2 AND rol = $3 LIMIT 1",
-    [usuarioId, asociacionId, role],
-  );
+const verifyMembershipInAssociation = async (usuarioId, asociacionId, role) => {
+  const params = [usuarioId, asociacionId];
+  let query =
+    "SELECT id, rol FROM membresias WHERE usuario_id = $1 AND asociacion_id = $2";
+
+  if (role) {
+    params.push(role);
+    query += " AND rol = $3";
+  }
+
+  query += " LIMIT 1";
+
+  const membRes = await pool.query(query, params);
   const membresia = membRes.rows[0];
   if (!membresia) return false;
   const histRes = await pool.query(
@@ -44,6 +51,37 @@ const verifyRoleInAssociation = async (usuarioId, asociacionId, role) => {
   const latest = histRes.rows[0];
   if (latest && latest.estado === "INACTIVO") return false;
   return true;
+};
+
+// Verifica que el usuario tenga cierto rol en la asociación indicada
+const verifyRoleInAssociation = async (usuarioId, asociacionId, role) => {
+  return verifyMembershipInAssociation(usuarioId, asociacionId, role);
+};
+
+const isAssociationMember = async (req, res, next) => {
+  const usuarioId = req.user && req.user.id;
+  const asociacionId =
+    req.params.asociacion_id ||
+    req.body.asociacion_id ||
+    req.query.asociacion_id;
+
+  if (!usuarioId || !asociacionId) {
+    return res.status(400).json({ message: "Missing association or user" });
+  }
+
+  try {
+    const ok = await verifyMembershipInAssociation(usuarioId, asociacionId);
+    if (!ok) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: Members only for this association" });
+    }
+    next();
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error verifying membership", error: error.message });
+  }
 };
 
 const isAsociacionAdmin = async (req, res, next) => {
@@ -115,6 +153,7 @@ const isFiscal = async (req, res, next) => {
 module.exports = {
   authMiddleware,
   isAdmin,
+  isAssociationMember,
   isAsociacionAdmin,
   isPropietario,
   isFiscal,

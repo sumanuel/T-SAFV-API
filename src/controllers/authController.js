@@ -4,9 +4,16 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const register = async (req, res) => {
-  const { nombre, email, password } = req.body;
+  const { nombre, email, password, telefono, rif_cedula, direccion } = req.body;
   try {
-    const user = await userModel.createUser(nombre, email, password);
+    const user = await userModel.createUser({
+      nombre,
+      email,
+      password,
+      telefono,
+      rif_cedula,
+      direccion,
+    });
     res.status(201).json({ message: "User created successfully", user });
   } catch (error) {
     res
@@ -29,14 +36,32 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, rol: user.rol },
+      {
+        id: user.id,
+        rol: user.rol,
+        nombre: user.nombre,
+        email: user.email,
+        telefono: user.telefono,
+        rif_cedula: user.rif_cedula,
+        direccion: user.direccion,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
       },
     );
 
-    res.json({ token });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        telefono: user.telefono,
+        rif_cedula: user.rif_cedula,
+        direccion: user.direccion,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
