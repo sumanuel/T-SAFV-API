@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "T-SAFV Minimal",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "http://localhost:3000/api/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"nombre\": \"App User\", \"email\": \"user@example.com\", \"password\": \"Secret123!\" }"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "http://localhost:3000/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"user@example.com\", \"password\": \"Secret123!\" }"
+        }
+      }
+    },
+    {
+      "name": "Create Asociacion",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "http://localhost:3000/api/asociaciones",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"nombre\": \"Mi Asociacion\", \"rif\": \"J-12345678\" }"
+        }
+      }
+    },
+    {
+      "name": "Create Invitacion",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "http://localhost:3000/api/invitaciones",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"asociacion_id\": 1, \"email_invitado\": \"invited@example.com\", \"rol_invitado\": \"PROPIETARIO\" }"
+        }
+      }
+    },
+    {
+      "name": "Accept Invitacion",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_invited}}" }
+        ],
+        "url": "http://localhost:3000/api/invitaciones/respond",
+        "body": { "mode": "raw", "raw": "{ \"token\": \"<INVITE_TOKEN>\" }" }
+      }
+    }
+  ]
+}
