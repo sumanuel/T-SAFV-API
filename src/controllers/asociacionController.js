@@ -59,12 +59,10 @@ const listMembers = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error listing association members",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error listing association members",
+      error: error.message,
+    });
   }
 };
 
@@ -75,12 +73,10 @@ const listUnits = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error listing association units",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error listing association units",
+      error: error.message,
+    });
   }
 };
 
@@ -93,12 +89,10 @@ const listTraceability = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error listing association traceability",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error listing association traceability",
+      error: error.message,
+    });
   }
 };
 

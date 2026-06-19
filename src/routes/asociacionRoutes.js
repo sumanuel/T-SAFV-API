@@ -34,7 +34,9 @@ router.post(
 router.put(
   "/:asociacion_id",
   param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
-  body("nombre").isLength({ min: 3 }).withMessage("nombre must be at least 3 chars"),
+  body("nombre")
+    .isLength({ min: 3 })
+    .withMessage("nombre must be at least 3 chars"),
   body("rif").optional().isString(),
   validate,
   isAsociacionAdmin,
