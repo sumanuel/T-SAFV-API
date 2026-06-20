@@ -31,6 +31,13 @@ router.post(
 // Listar invitaciones pendientes para el usuario autenticado
 router.get("/mine", authMiddleware, invitacionController.listMy);
 
+router.get(
+  "/asociaciones/:asociacion_id",
+  authMiddleware,
+  isAsociacionAdmin,
+  invitacionController.listByAssociation,
+);
+
 // Responder (aceptar) invitación
 router.post("/respond", authMiddleware, invitacionController.respond);
 

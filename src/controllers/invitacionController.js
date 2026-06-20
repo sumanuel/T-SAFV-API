@@ -59,6 +59,22 @@ const listMy = async (req, res) => {
   }
 };
 
+const listByAssociation = async (req, res) => {
+  try {
+    const rows = await invitacionModel.findByAssociation(
+      req.params.asociacion_id,
+    );
+    res.json(rows);
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Error listing association invitations",
+        error: error.message,
+      });
+  }
+};
+
 const respond = async (req, res) => {
   const { token } = req.body;
   const userId = req.user.id;
@@ -73,5 +89,6 @@ const respond = async (req, res) => {
 module.exports = {
   create,
   listMy,
+  listByAssociation,
   respond,
 };

@@ -26,6 +26,16 @@ const findPendingByEmail = async (email) => {
   return res.rows;
 };
 
+const findByAssociation = async (asociacionId) => {
+  const res = await pool.query(
+    `SELECT * FROM invitaciones
+     WHERE asociacion_id = $1
+     ORDER BY created_at DESC NULLS LAST, id DESC`,
+    [asociacionId],
+  );
+  return res.rows;
+};
+
 const findByToken = async (token) => {
   const res = await pool.query(
     "SELECT * FROM invitaciones WHERE token_invitacion = $1 LIMIT 1",
@@ -79,6 +89,7 @@ const acceptInvitation = async (token, userId) => {
 module.exports = {
   createInvitacion,
   findPendingByEmail,
+  findByAssociation,
   findByToken,
   acceptInvitation,
 };
