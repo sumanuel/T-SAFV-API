@@ -84,6 +84,7 @@ const getUserAssociations = async (userId) => {
         COALESCE(metrics.fiscal_count, 0) AS fiscal_count,
         COALESCE(metrics.members_count, 0) AS members_count,
         COALESCE(units.units_count, 0) AS units_count,
+        COALESCE(units.active_units_count, 0) AS active_units_count,
         COALESCE(trace.trazas_hoy, 0) AS trazas_hoy
      FROM asociaciones a
      JOIN membresias m ON m.asociacion_id = a.id
@@ -111,8 +112,17 @@ const getUserAssociations = async (userId) => {
        WHERE mem.asociacion_id = a.id
      ) metrics ON true
      LEFT JOIN LATERAL (
-       SELECT COUNT(*) AS units_count
+       SELECT
+         COUNT(*) AS units_count,
+         COUNT(*) FILTER (WHERE COALESCE(unit_state.estado, 'ACTIVO') = 'ACTIVO') AS active_units_count
        FROM unidades_transporte u
+       LEFT JOIN LATERAL (
+         SELECT estado
+         FROM historial_estados
+         WHERE entidad_tipo = 'UNIDAD' AND entidad_id = u.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) unit_state ON true
        WHERE u.asociacion_id = a.id
      ) units ON true
      LEFT JOIN LATERAL (
