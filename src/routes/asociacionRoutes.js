@@ -51,6 +51,36 @@ router.get(
   asociacionController.listMembers,
 );
 
+router.post(
+  "/:asociacion_id/miembros",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  body("nombre").isLength({ min: 2 }).withMessage("nombre too short"),
+  body("email").isEmail().withMessage("Invalid email"),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+  body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.createMember,
+);
+
+router.put(
+  "/:asociacion_id/miembros/:membresia_id",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("membresia_id").isInt().withMessage("membresia_id must be integer"),
+  body("nombre").isLength({ min: 2 }).withMessage("nombre too short"),
+  body("email").isEmail().withMessage("Invalid email"),
+  body("password")
+    .optional()
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+  body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.updateMember,
+);
+
 router.get(
   "/:asociacion_id/unidades",
   param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),

@@ -2,7 +2,16 @@ const unidadModel = require("../models/unidadModel");
 const historyModel = require("../models/historyModel");
 
 const create = async (req, res) => {
-  const { asociacion_id, propietario_id, placa, marca, modelo, ano } = req.body;
+  const {
+    asociacion_id,
+    propietario_id,
+    placa,
+    numero_unidad,
+    numero_puestos,
+    marca,
+    modelo,
+    ano,
+  } = req.body;
   const admin_id = req.user.id; // Asumimos que el admin está logueado y su id está en req.user
 
   try {
@@ -10,6 +19,8 @@ const create = async (req, res) => {
       asociacion_id,
       propietario_id,
       placa,
+      numero_unidad,
+      numero_puestos,
       marca,
       modelo,
       ano,

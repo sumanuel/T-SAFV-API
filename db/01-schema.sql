@@ -92,6 +92,8 @@ CREATE TABLE unidades_transporte (
     asociacion_id INT NOT NULL REFERENCES asociaciones(id),
     propietario_id INT NOT NULL REFERENCES usuarios(id),
     placa VARCHAR(15) NOT NULL,
+    numero_unidad VARCHAR(50),
+    numero_puestos INT,
     marca VARCHAR(100),
     modelo VARCHAR(100),
     ano INT,

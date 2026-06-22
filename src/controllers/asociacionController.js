@@ -66,6 +66,44 @@ const listMembers = async (req, res) => {
   }
 };
 
+const createMember = async (req, res) => {
+  try {
+    const row = await asociacionModel.createAssociationMember(
+      req.params.asociacion_id,
+      req.body,
+      req.user.id,
+    );
+    res.status(201).json(row);
+  } catch (error) {
+    if (error.code === "MEMBER_EXISTS") {
+      return res
+        .status(409)
+        .json({ message: "El miembro ya pertenece a esta asociación." });
+    }
+    res
+      .status(500)
+      .json({ message: "Error creating member", error: error.message });
+  }
+};
+
+const updateMember = async (req, res) => {
+  try {
+    const row = await asociacionModel.updateAssociationMember(
+      req.params.asociacion_id,
+      req.params.membresia_id,
+      req.body,
+    );
+    if (!row) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.json(row);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating member", error: error.message });
+  }
+};
+
 const listUnits = async (req, res) => {
   try {
     const rows = await exportModel.getUnidadesByAsociacion(
@@ -101,6 +139,8 @@ module.exports = {
   update,
   listMine,
   listMembers,
+  createMember,
+  updateMember,
   listUnits,
   listTraceability,
 };

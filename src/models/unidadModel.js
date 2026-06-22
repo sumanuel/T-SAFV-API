@@ -5,6 +5,8 @@ const createUnidad = async (
   asociacion_id,
   propietario_id,
   placa,
+  numero_unidad,
+  numero_puestos,
   marca,
   modelo,
   ano,
@@ -14,8 +16,26 @@ const createUnidad = async (
   try {
     await client.query("BEGIN");
     const unidadRes = await client.query(
-      "INSERT INTO unidades_transporte (asociacion_id, propietario_id, placa, marca, modelo, ano) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [asociacion_id, propietario_id, placa, marca, modelo, ano],
+      `INSERT INTO unidades_transporte (
+         asociacion_id,
+         propietario_id,
+         placa,
+         numero_unidad,
+         numero_puestos,
+         marca,
+         modelo,
+         ano
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [
+        asociacion_id,
+        propietario_id,
+        placa,
+        numero_unidad || null,
+        numero_puestos || null,
+        marca || null,
+        modelo || null,
+        ano || null,
+      ],
     );
     const nuevaUnidad = unidadRes.rows[0];
 

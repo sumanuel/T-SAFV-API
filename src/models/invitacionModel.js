@@ -64,19 +64,35 @@ const acceptInvitation = async (token, userId) => {
       ["ACEPTADA", invitacion.id],
     );
 
-    const membresiaRes = await client.query(
-      "INSERT INTO membresias (usuario_id, asociacion_id, rol) VALUES ($1, $2, $3) RETURNING id",
-      [userId, invitacion.asociacion_id, invitacion.rol_invitado],
+    const existingMembershipRes = await client.query(
+      "SELECT id FROM membresias WHERE usuario_id = $1 AND asociacion_id = $2 LIMIT 1",
+      [userId, invitacion.asociacion_id],
     );
-    const membresia = membresiaRes.rows[0];
 
-    const histRes = await client.query(
-      "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [membresia.id, "MEMBRESIA", "ACTIVO", "Aceptación de invitación", userId],
-    );
+    let membresia = existingMembershipRes.rows[0];
+    let histRes;
+
+    if (!membresia) {
+      const membresiaRes = await client.query(
+        "INSERT INTO membresias (usuario_id, asociacion_id, rol) VALUES ($1, $2, $3) RETURNING id",
+        [userId, invitacion.asociacion_id, invitacion.rol_invitado],
+      );
+      membresia = membresiaRes.rows[0];
+
+      histRes = await client.query(
+        "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [
+          membresia.id,
+          "MEMBRESIA",
+          "ACTIVO",
+          "Aceptación de invitación",
+          userId,
+        ],
+      );
+    }
 
     await client.query("COMMIT");
-    const historial = histRes.rows[0];
+    const historial = histRes ? histRes.rows[0] : null;
     return { invitacion, membresia, historial };
   } catch (error) {
     await client.query("ROLLBACK");

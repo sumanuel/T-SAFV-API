@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 const historyModel = require("./historyModel");
+const bcrypt = require("bcryptjs");
 
 /**
  * Crea una nueva asociación y asigna al creador como el primer administrador.
@@ -15,7 +16,7 @@ const createAsociacion = async (datosAsociacion, adminId) => {
     direccion_fiscal,
     email,
     telefonos,
-    logo_url,
+    logo_data,
     redes_sociales,
   } = datosAsociacion;
   const client = await pool.connect();
@@ -25,7 +26,7 @@ const createAsociacion = async (datosAsociacion, adminId) => {
 
     // 1. Insertar la nueva asociación
     const asociacionRes = await client.query(
-      `INSERT INTO asociaciones (nombre, rif, direccion_fiscal, email, telefonos, logo_url, redes_sociales, creada_por)
+      `INSERT INTO asociaciones (nombre, rif, direccion_fiscal, email, telefonos, logo_data, redes_sociales, creada_por)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
@@ -34,7 +35,7 @@ const createAsociacion = async (datosAsociacion, adminId) => {
         direccion_fiscal,
         email,
         telefonos,
-        logo_url,
+        logo_data,
         redes_sociales,
         adminId,
       ],
@@ -147,7 +148,7 @@ const updateAssociation = async (asociacionId, payload) => {
     direccion_fiscal,
     email,
     telefonos,
-    logo_url,
+    logo_data,
     redes_sociales,
   } = payload;
 
@@ -158,7 +159,7 @@ const updateAssociation = async (asociacionId, payload) => {
          direccion_fiscal = $3,
          email = $4,
          telefonos = $5,
-         logo_url = $6,
+         logo_data = $6,
          redes_sociales = $7
      WHERE id = $8
      RETURNING *`,
@@ -168,7 +169,7 @@ const updateAssociation = async (asociacionId, payload) => {
       direccion_fiscal || null,
       email || null,
       telefonos || null,
-      logo_url || null,
+      logo_data || null,
       redes_sociales || null,
       asociacionId,
     ],
@@ -177,8 +178,144 @@ const updateAssociation = async (asociacionId, payload) => {
   return res.rows[0];
 };
 
+const createAssociationMember = async (asociacionId, payload, adminId) => {
+  const { nombre, email, password, telefono, rif_cedula, direccion, rol } =
+    payload;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const existingUserRes = await client.query(
+      "SELECT * FROM usuarios WHERE email = $1 LIMIT 1",
+      [email],
+    );
+    let user = existingUserRes.rows[0];
+
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const userRes = await client.query(
+        `INSERT INTO usuarios (nombre, email, password, telefono, rif_cedula, direccion)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, nombre, email, telefono, rif_cedula, direccion`,
+        [
+          nombre,
+          email,
+          hashedPassword,
+          telefono || null,
+          rif_cedula || null,
+          direccion || null,
+        ],
+      );
+      user = userRes.rows[0];
+    }
+
+    const existingMembershipRes = await client.query(
+      "SELECT id FROM membresias WHERE usuario_id = $1 AND asociacion_id = $2 LIMIT 1",
+      [user.id, asociacionId],
+    );
+
+    if (existingMembershipRes.rows[0]) {
+      const error = new Error("Member already exists in this association");
+      error.code = "MEMBER_EXISTS";
+      throw error;
+    }
+
+    const membershipRes = await client.query(
+      `INSERT INTO membresias (usuario_id, asociacion_id, rol)
+       VALUES ($1, $2, $3)
+       RETURNING id, usuario_id, asociacion_id, rol`,
+      [user.id, asociacionId, rol],
+    );
+    const membership = membershipRes.rows[0];
+
+    await client.query(
+      "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5)",
+      [membership.id, "MEMBRESIA", "ACTIVO", "Creación directa", adminId],
+    );
+
+    await client.query("COMMIT");
+    return {
+      ...user,
+      membresia_id: membership.id,
+      rol: membership.rol,
+      estado_membresia: "ACTIVO",
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
+  const { nombre, email, password, telefono, rif_cedula, direccion, rol } =
+    payload;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const membershipRes = await client.query(
+      `SELECT m.*, u.id AS user_id
+       FROM membresias m
+       JOIN usuarios u ON u.id = m.usuario_id
+       WHERE m.id = $1 AND m.asociacion_id = $2
+       LIMIT 1`,
+      [membresiaId, asociacionId],
+    );
+    const membership = membershipRes.rows[0];
+    if (!membership) return null;
+
+    let hashedPassword = null;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const userRes = await client.query(
+      `UPDATE usuarios
+       SET nombre = $1,
+           email = $2,
+           telefono = $3,
+           rif_cedula = $4,
+           direccion = $5,
+           password = COALESCE($6, password)
+       WHERE id = $7
+       RETURNING id, nombre, email, telefono, rif_cedula, direccion`,
+      [
+        nombre,
+        email,
+        telefono || null,
+        rif_cedula || null,
+        direccion || null,
+        hashedPassword,
+        membership.user_id,
+      ],
+    );
+
+    await client.query(`UPDATE membresias SET rol = $1 WHERE id = $2`, [
+      rol,
+      membresiaId,
+    ]);
+
+    await client.query("COMMIT");
+    return {
+      ...userRes.rows[0],
+      membresia_id: Number(membresiaId),
+      rol,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   createAsociacion,
   getUserAssociations,
   updateAssociation,
+  createAssociationMember,
+  updateAssociationMember,
 };

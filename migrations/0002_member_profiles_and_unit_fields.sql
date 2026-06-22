@@ -1,0 +1,15 @@
+ALTER TABLE usuarios
+  ADD COLUMN IF NOT EXISTS telefono TEXT,
+  ADD COLUMN IF NOT EXISTS rif_cedula TEXT,
+  ADD COLUMN IF NOT EXISTS direccion TEXT;
+
+ALTER TABLE asociaciones
+  ADD COLUMN IF NOT EXISTS direccion_fiscal TEXT,
+  ADD COLUMN IF NOT EXISTS email TEXT,
+  ADD COLUMN IF NOT EXISTS telefonos TEXT,
+  ADD COLUMN IF NOT EXISTS logo_data TEXT,
+  ADD COLUMN IF NOT EXISTS redes_sociales JSONB;
+
+ALTER TABLE unidades_transporte
+  ADD COLUMN IF NOT EXISTS numero_unidad TEXT,
+  ADD COLUMN IF NOT EXISTS numero_puestos INTEGER;
