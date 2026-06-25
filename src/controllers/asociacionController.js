@@ -134,6 +134,34 @@ const listTraceability = async (req, res) => {
   }
 };
 
+const listPayments = async (req, res) => {
+  try {
+    const rows = await asociacionModel.listAssociationPayments(
+      req.params.asociacion_id,
+    );
+    res.json(rows);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error listing payments", error: error.message });
+  }
+};
+
+const createPayment = async (req, res) => {
+  try {
+    const row = await asociacionModel.createAssociationPayment(
+      req.params.asociacion_id,
+      req.body,
+      req.user.id,
+    );
+    res.status(201).json(row);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error creating payment", error: error.message });
+  }
+};
+
 module.exports = {
   create,
   update,
@@ -143,4 +171,6 @@ module.exports = {
   updateMember,
   listUnits,
   listTraceability,
+  listPayments,
+  createPayment,
 };

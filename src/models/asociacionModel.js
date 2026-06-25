@@ -86,7 +86,15 @@ const getUserAssociations = async (userId) => {
         COALESCE(metrics.members_count, 0) AS members_count,
         COALESCE(units.units_count, 0) AS units_count,
         COALESCE(units.active_units_count, 0) AS active_units_count,
-        COALESCE(trace.trazas_hoy, 0) AS trazas_hoy
+        COALESCE(trace.trazas_hoy, 0) AS trazas_hoy,
+        payment.fecha_desde AS licencia_desde,
+        payment.fecha_hasta AS licencia_hasta,
+        payment.estado AS licencia_estado,
+        CASE
+          WHEN a.habilitada = FALSE THEN FALSE
+          WHEN payment.fecha_hasta IS NULL THEN a.habilitada
+          ELSE payment.fecha_hasta >= CURRENT_DATE
+        END AS disponible_app
      FROM asociaciones a
      JOIN membresias m ON m.asociacion_id = a.id
      LEFT JOIN LATERAL (
@@ -127,6 +135,13 @@ const getUserAssociations = async (userId) => {
        WHERE u.asociacion_id = a.id
      ) units ON true
      LEFT JOIN LATERAL (
+       SELECT fecha_desde, fecha_hasta, estado
+       FROM asociacion_pagos ap
+       WHERE ap.asociacion_id = a.id
+       ORDER BY fecha_hasta DESC, id DESC
+       LIMIT 1
+     ) payment ON true
+     LEFT JOIN LATERAL (
        SELECT COUNT(*) AS trazas_hoy
        FROM registros_fiscalizacion rf
        WHERE rf.asociacion_id = a.id
@@ -150,6 +165,7 @@ const updateAssociation = async (asociacionId, payload) => {
     telefonos,
     logo_data,
     redes_sociales,
+    habilitada,
   } = payload;
 
   const res = await pool.query(
@@ -160,8 +176,9 @@ const updateAssociation = async (asociacionId, payload) => {
          email = $4,
          telefonos = $5,
          logo_data = $6,
-         redes_sociales = $7
-     WHERE id = $8
+         redes_sociales = $7,
+         habilitada = COALESCE($8, habilitada)
+     WHERE id = $9
      RETURNING *`,
     [
       nombre,
@@ -171,6 +188,7 @@ const updateAssociation = async (asociacionId, payload) => {
       telefonos || null,
       logo_data || null,
       redes_sociales || null,
+      typeof habilitada === "boolean" ? habilitada : null,
       asociacionId,
     ],
   );
@@ -178,9 +196,174 @@ const updateAssociation = async (asociacionId, payload) => {
   return res.rows[0];
 };
 
+const createOwnerUnits = async (
+  client,
+  vehicles,
+  ownerId,
+  asociacionId,
+  adminId,
+) => {
+  const createdUnits = [];
+
+  for (const vehicle of vehicles || []) {
+    if (!vehicle?.placa || !vehicle?.numero_unidad) {
+      continue;
+    }
+
+    const unitRes = await client.query(
+      `INSERT INTO unidades_transporte (
+         asociacion_id,
+         propietario_id,
+         placa,
+         numero_unidad,
+         numero_puestos,
+         color,
+         uso,
+         capacidad,
+         serial_carroceria,
+         serial_motor,
+         numero_cilindros,
+         peso,
+         numero_poliza_rcv,
+         numero_placa_asignada,
+         fecha_emision,
+         chofer,
+         marca,
+         modelo,
+         ano
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+       RETURNING *`,
+      [
+        asociacionId,
+        ownerId,
+        vehicle.placa,
+        vehicle.numero_unidad,
+        vehicle.numero_puestos || vehicle.capacidad || null,
+        vehicle.color || null,
+        vehicle.uso || null,
+        vehicle.capacidad || null,
+        vehicle.serial_carroceria || null,
+        vehicle.serial_motor || null,
+        vehicle.numero_cilindros || null,
+        vehicle.peso || null,
+        vehicle.numero_poliza_rcv || null,
+        vehicle.numero_placa_asignada || null,
+        vehicle.fecha_emision || null,
+        vehicle.chofer || null,
+        vehicle.marca || null,
+        vehicle.modelo || null,
+        vehicle.ano || null,
+      ],
+    );
+
+    const createdUnit = unitRes.rows[0];
+    createdUnits.push(createdUnit);
+
+    await client.query(
+      "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5)",
+      [
+        createdUnit.id,
+        "UNIDAD",
+        "ACTIVO",
+        "Creación desde propietario",
+        adminId,
+      ],
+    );
+  }
+
+  return createdUnits;
+};
+
+const upsertOwnerUnits = async (
+  client,
+  vehicles,
+  ownerId,
+  asociacionId,
+  adminId,
+) => {
+  const result = [];
+
+  for (const vehicle of vehicles || []) {
+    if (!vehicle?.placa || !vehicle?.numero_unidad) continue;
+
+    if (vehicle.id) {
+      const updateRes = await client.query(
+        `UPDATE unidades_transporte
+         SET placa = $1,
+             numero_unidad = $2,
+             numero_puestos = $3,
+             color = $4,
+             uso = $5,
+             capacidad = $6,
+             serial_carroceria = $7,
+             serial_motor = $8,
+             numero_cilindros = $9,
+             peso = $10,
+             numero_poliza_rcv = $11,
+             numero_placa_asignada = $12,
+             fecha_emision = $13,
+             chofer = $14,
+             marca = $15,
+             modelo = $16,
+             ano = $17,
+             propietario_id = $18
+         WHERE id = $19 AND asociacion_id = $20
+         RETURNING *`,
+        [
+          vehicle.placa,
+          vehicle.numero_unidad,
+          vehicle.numero_puestos || vehicle.capacidad || null,
+          vehicle.color || null,
+          vehicle.uso || null,
+          vehicle.capacidad || null,
+          vehicle.serial_carroceria || null,
+          vehicle.serial_motor || null,
+          vehicle.numero_cilindros || null,
+          vehicle.peso || null,
+          vehicle.numero_poliza_rcv || null,
+          vehicle.numero_placa_asignada || null,
+          vehicle.fecha_emision || null,
+          vehicle.chofer || null,
+          vehicle.marca || null,
+          vehicle.modelo || null,
+          vehicle.ano || null,
+          ownerId,
+          vehicle.id,
+          asociacionId,
+        ],
+      );
+
+      if (updateRes.rows[0]) {
+        result.push(updateRes.rows[0]);
+        continue;
+      }
+    }
+
+    const created = await createOwnerUnits(
+      client,
+      [vehicle],
+      ownerId,
+      asociacionId,
+      adminId,
+    );
+    result.push(...created);
+  }
+
+  return result;
+};
+
 const createAssociationMember = async (asociacionId, payload, adminId) => {
-  const { nombre, email, password, telefono, rif_cedula, direccion, rol } =
-    payload;
+  const {
+    nombre,
+    apellido,
+    email,
+    password,
+    telefono,
+    rif_cedula,
+    direccion,
+    rol,
+    vehicles,
+  } = payload;
   const client = await pool.connect();
 
   try {
@@ -195,16 +378,37 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
     if (!user) {
       const hashedPassword = await bcrypt.hash(password, 10);
       const userRes = await client.query(
-        `INSERT INTO usuarios (nombre, email, password, telefono, rif_cedula, direccion)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, nombre, email, telefono, rif_cedula, direccion`,
+        `INSERT INTO usuarios (nombre, apellido, email, password, telefono, rif_cedula, direccion)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion`,
         [
           nombre,
+          apellido || null,
           email,
           hashedPassword,
           telefono || null,
           rif_cedula || null,
           direccion || null,
+        ],
+      );
+      user = userRes.rows[0];
+    } else {
+      const userRes = await client.query(
+        `UPDATE usuarios
+         SET nombre = COALESCE($1, nombre),
+             apellido = COALESCE($2, apellido),
+             telefono = COALESCE($3, telefono),
+             rif_cedula = COALESCE($4, rif_cedula),
+             direccion = COALESCE($5, direccion)
+         WHERE id = $6
+         RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion`,
+        [
+          nombre || null,
+          apellido || null,
+          telefono || null,
+          rif_cedula || null,
+          direccion || null,
+          user.id,
         ],
       );
       user = userRes.rows[0];
@@ -234,12 +438,24 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
       [membership.id, "MEMBRESIA", "ACTIVO", "Creación directa", adminId],
     );
 
+    const linkedUnits =
+      role === "PROPIETARIO"
+        ? await createOwnerUnits(
+            client,
+            vehicles,
+            user.id,
+            asociacionId,
+            adminId,
+          )
+        : [];
+
     await client.query("COMMIT");
     return {
       ...user,
       membresia_id: membership.id,
       rol: membership.rol,
       estado_membresia: "ACTIVO",
+      linked_units: linkedUnits,
     };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -250,8 +466,17 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
 };
 
 const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
-  const { nombre, email, password, telefono, rif_cedula, direccion, rol } =
-    payload;
+  const {
+    nombre,
+    apellido,
+    email,
+    password,
+    telefono,
+    rif_cedula,
+    direccion,
+    rol,
+    vehicles,
+  } = payload;
   const client = await pool.connect();
 
   try {
@@ -275,15 +500,17 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
     const userRes = await client.query(
       `UPDATE usuarios
        SET nombre = $1,
-           email = $2,
-           telefono = $3,
-           rif_cedula = $4,
-           direccion = $5,
-           password = COALESCE($6, password)
-       WHERE id = $7
-       RETURNING id, nombre, email, telefono, rif_cedula, direccion`,
+           apellido = $2,
+           email = $3,
+           telefono = $4,
+           rif_cedula = $5,
+           direccion = $6,
+           password = COALESCE($7, password)
+       WHERE id = $8
+       RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion`,
       [
         nombre,
+        apellido || null,
         email,
         telefono || null,
         rif_cedula || null,
@@ -298,11 +525,23 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
       membresiaId,
     ]);
 
+    const linkedUnits =
+      rol === "PROPIETARIO"
+        ? await upsertOwnerUnits(
+            client,
+            vehicles,
+            membership.user_id,
+            asociacionId,
+            membership.user_id,
+          )
+        : [];
+
     await client.query("COMMIT");
     return {
       ...userRes.rows[0],
       membresia_id: Number(membresiaId),
       rol,
+      linked_units: linkedUnits,
     };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -312,10 +551,64 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
   }
 };
 
+const listAssociationPayments = async (asociacionId) => {
+  const res = await pool.query(
+    `SELECT * FROM asociacion_pagos
+     WHERE asociacion_id = $1
+     ORDER BY fecha_hasta DESC, id DESC`,
+    [asociacionId],
+  );
+  return res.rows;
+};
+
+const createAssociationPayment = async (asociacionId, payload, userId) => {
+  const {
+    monto,
+    moneda,
+    fecha_desde,
+    fecha_hasta,
+    referencia,
+    notas,
+    estado,
+  } = payload;
+
+  const res = await pool.query(
+    `INSERT INTO asociacion_pagos (
+       asociacion_id,
+       monto,
+       moneda,
+       fecha_desde,
+       fecha_hasta,
+       referencia,
+       notas,
+       estado,
+       registrado_por_usuario_id
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     RETURNING *`,
+    [
+      asociacionId,
+      monto || null,
+      moneda || "USD",
+      fecha_desde,
+      fecha_hasta,
+      referencia || null,
+      notas || null,
+      estado || "ACTIVO",
+      userId,
+    ],
+  );
+
+  return res.rows[0];
+};
+
 module.exports = {
   createAsociacion,
   getUserAssociations,
   updateAssociation,
   createAssociationMember,
   updateAssociationMember,
+  createOwnerUnits,
+  upsertOwnerUnits,
+  listAssociationPayments,
+  createAssociationPayment,
 };

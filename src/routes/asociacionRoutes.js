@@ -97,4 +97,28 @@ router.get(
   asociacionController.listTraceability,
 );
 
+router.get(
+  "/:asociacion_id/pagos",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.listPayments,
+);
+
+router.post(
+  "/:asociacion_id/pagos",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  body("fecha_desde")
+    .isString()
+    .notEmpty()
+    .withMessage("fecha_desde is required"),
+  body("fecha_hasta")
+    .isString()
+    .notEmpty()
+    .withMessage("fecha_hasta is required"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.createPayment,
+);
+
 module.exports = router;

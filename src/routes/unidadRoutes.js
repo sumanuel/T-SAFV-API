@@ -23,6 +23,17 @@ router.post(
     .notEmpty()
     .withMessage("numero_unidad is required"),
   body("numero_puestos").isInt().withMessage("numero_puestos must be integer"),
+  body("color").optional().isString(),
+  body("uso").optional().isString(),
+  body("capacidad").optional().isString(),
+  body("serial_carroceria").optional().isString(),
+  body("serial_motor").optional().isString(),
+  body("numero_cilindros").optional().isInt(),
+  body("peso").optional().isString(),
+  body("numero_poliza_rcv").optional().isString(),
+  body("numero_placa_asignada").optional().isString(),
+  body("fecha_emision").optional().isString(),
+  body("chofer").optional().isString(),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
@@ -43,6 +54,17 @@ router.post(
     .notEmpty()
     .withMessage("numero_unidad is required"),
   body("numero_puestos").isInt().withMessage("numero_puestos must be integer"),
+  body("color").optional().isString(),
+  body("uso").optional().isString(),
+  body("capacidad").optional().isString(),
+  body("serial_carroceria").optional().isString(),
+  body("serial_motor").optional().isString(),
+  body("numero_cilindros").optional().isInt(),
+  body("peso").optional().isString(),
+  body("numero_poliza_rcv").optional().isString(),
+  body("numero_placa_asignada").optional().isString(),
+  body("fecha_emision").optional().isString(),
+  body("chofer").optional().isString(),
   (req, res, next) => {
     req.body.asociacion_id = Number(req.params.asociacion_id);
     const errors = validationResult(req);

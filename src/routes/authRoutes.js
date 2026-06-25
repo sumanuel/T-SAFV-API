@@ -13,6 +13,7 @@ const validate = (req, res, next) => {
 router.post(
   "/register",
   body("nombre").isLength({ min: 2 }).withMessage("nombre too short"),
+  body("apellido").optional().isString(),
   body("email").isEmail().withMessage("Invalid email"),
   body("password")
     .isLength({ min: 8 })

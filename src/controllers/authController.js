@@ -4,10 +4,12 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const register = async (req, res) => {
-  const { nombre, email, password, telefono, rif_cedula, direccion } = req.body;
+  const { nombre, apellido, email, password, telefono, rif_cedula, direccion } =
+    req.body;
   try {
     const user = await userModel.createUser({
       nombre,
+      apellido,
       email,
       password,
       telefono,
@@ -40,6 +42,7 @@ const login = async (req, res) => {
         id: user.id,
         rol: user.rol,
         nombre: user.nombre,
+        apellido: user.apellido,
         email: user.email,
         telefono: user.telefono,
         rif_cedula: user.rif_cedula,
@@ -56,6 +59,7 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         nombre: user.nombre,
+        apellido: user.apellido,
         email: user.email,
         telefono: user.telefono,
         rif_cedula: user.rif_cedula,

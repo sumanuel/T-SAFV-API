@@ -5,13 +5,15 @@ const getMiembrosByAsociacion = async (asociacion_id) => {
     `SELECT
        u.id,
        u.nombre,
+       u.apellido,
        u.email,
        u.telefono,
        u.rif_cedula,
        u.direccion,
        m.id AS membresia_id,
        m.rol,
-       COALESCE(he.estado, 'ACTIVO') AS estado_membresia
+       COALESCE(he.estado, 'ACTIVO') AS estado_membresia,
+       COALESCE(vehicle_data.linked_units, '[]'::json) AS linked_units
      FROM usuarios u
      JOIN membresias m ON m.usuario_id = u.id
      LEFT JOIN LATERAL (
@@ -21,6 +23,33 @@ const getMiembrosByAsociacion = async (asociacion_id) => {
        ORDER BY created_at DESC
        LIMIT 1
      ) he ON true
+     LEFT JOIN LATERAL (
+       SELECT json_agg(
+         json_build_object(
+           'id', unit.id,
+           'placa', unit.placa,
+           'ano', unit.ano,
+           'marca', unit.marca,
+           'modelo', unit.modelo,
+           'color', unit.color,
+           'uso', unit.uso,
+           'capacidad', unit.capacidad,
+           'serial_carroceria', unit.serial_carroceria,
+           'serial_motor', unit.serial_motor,
+           'numero_cilindros', unit.numero_cilindros,
+           'peso', unit.peso,
+           'numero_poliza_rcv', unit.numero_poliza_rcv,
+           'numero_placa_asignada', unit.numero_placa_asignada,
+           'fecha_emision', unit.fecha_emision,
+           'chofer', unit.chofer,
+           'numero_unidad', unit.numero_unidad,
+           'numero_puestos', unit.numero_puestos
+         )
+         ORDER BY unit.numero_unidad NULLS LAST, unit.id
+       ) AS linked_units
+       FROM unidades_transporte unit
+       WHERE unit.propietario_id = u.id AND unit.asociacion_id = m.asociacion_id
+     ) vehicle_data ON true
      WHERE m.asociacion_id = $1`,
     [asociacion_id],
   );
@@ -33,6 +62,7 @@ const getUnidadesByAsociacion = async (asociacion_id) => {
        u.*,
        he.estado as ultimo_estado,
        owner.nombre AS propietario_nombre,
+       owner.apellido AS propietario_apellido,
        owner.email AS propietario_email
      FROM unidades_transporte u
      LEFT JOIN usuarios owner ON owner.id = u.propietario_id
