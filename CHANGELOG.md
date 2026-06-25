@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-06-25
+
+### Added
+
+- **Miembros directos por asociación**: Se agregan endpoints para crear y editar propietarios o fiscales directamente desde la asociación, sin depender primero de invitaciones.
+- **Vehículos vinculados a propietarios**: El backend ya devuelve `linked_units` por miembro propietario dentro de la asociación para soportar ficha detalle y asociación de vehículos desde la app.
+- **Licencia y pagos**: Se agrega la tabla `asociacion_pagos` y endpoints base para consultar y registrar pagos de habilitación por asociación.
+- **Logo persistido en BD**: Las asociaciones pasan a aceptar `logo_data` para almacenar el logo directamente en la base de datos.
+
+### Changed
+
+- **Resumen de asociaciones**: `GET /api/asociaciones/mine` ahora devuelve conteos operativos, unidades activas y estado de disponibilidad de la app por vigencia de licencia.
+- **Unidades**: El modelo se amplía con `numero_unidad`, `numero_puestos` y campos técnicos/legales del vehículo.
+- **Configuración del API**: `express.json` aumenta su límite para soportar logos en base64.
+
 ## [0.9.0] - 2026-06-19
 
 ### Added
