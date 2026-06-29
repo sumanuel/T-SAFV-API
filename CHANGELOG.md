@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-06-29
+
+### Fixed
+
+- **Alta directa de miembros**: Se corrige la creacion de propietarios y fiscales por asociacion. El flujo estaba evaluando un campo de rol incorrecto al decidir si debia vincular unidades de propietario, lo que disparaba error 500 despues de crear la membresia.
+
+### Notes
+
+- Este ajuste restablece el contrato esperado por T-SAFV-App para `POST /api/asociaciones/:asociacion_id/miembros` sin cambiar payload ni respuesta.
+
 ## [1.0.0] - 2026-06-25
 
 ### Added

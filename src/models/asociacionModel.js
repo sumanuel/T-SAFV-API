@@ -439,7 +439,7 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
     );
 
     const linkedUnits =
-      role === "PROPIETARIO"
+      rol === "PROPIETARIO"
         ? await createOwnerUnits(
             client,
             vehicles,
@@ -562,15 +562,8 @@ const listAssociationPayments = async (asociacionId) => {
 };
 
 const createAssociationPayment = async (asociacionId, payload, userId) => {
-  const {
-    monto,
-    moneda,
-    fecha_desde,
-    fecha_hasta,
-    referencia,
-    notas,
-    estado,
-  } = payload;
+  const { monto, moneda, fecha_desde, fecha_hasta, referencia, notas, estado } =
+    payload;
 
   const res = await pool.query(
     `INSERT INTO asociacion_pagos (
