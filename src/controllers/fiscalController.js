@@ -14,7 +14,8 @@ const getUnidadesActivas = async (req, res) => {
 };
 
 const createRegistro = async (req, res) => {
-  const { unidad_id, asociacion_id, chofer, destino, pasajeros } = req.body;
+  const { unidad_id, asociacion_id, chofer, origen, destino, pasajeros } =
+    req.body;
   const fiscal_id = req.user.id;
   const fecha_hora_registro = new Date();
   try {
@@ -23,6 +24,7 @@ const createRegistro = async (req, res) => {
       fiscal_id,
       asociacion_id,
       chofer,
+      origen,
       destino,
       pasajeros,
       fecha_hora_registro,

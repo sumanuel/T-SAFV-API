@@ -58,7 +58,25 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
   const { unidad_id, asociacion_id } = req.params;
-  const { propietario_id, placa, numero_unidad, numero_puestos } = req.body;
+  const {
+    propietario_id,
+    placa,
+    marca,
+    modelo,
+    ano,
+    numero_unidad,
+    numero_puestos,
+    color,
+    capacidad,
+    serial_carroceria,
+    serial_motor,
+    numero_cilindros,
+    peso,
+    numero_poliza_rcv,
+    numero_placa_asignada,
+    fecha_emision,
+    chofer,
+  } = req.body;
 
   try {
     const unidad = await unidadModel.updateUnidad(
@@ -66,8 +84,21 @@ const update = async (req, res) => {
       asociacion_id,
       propietario_id,
       placa,
+      marca,
+      modelo,
+      ano,
       numero_unidad,
       numero_puestos,
+      color,
+      capacidad,
+      serial_carroceria,
+      serial_motor,
+      numero_cilindros,
+      peso,
+      numero_poliza_rcv,
+      numero_placa_asignada,
+      fecha_emision,
+      chofer,
     );
 
     if (!unidad) {

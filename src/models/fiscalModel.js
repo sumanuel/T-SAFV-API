@@ -21,18 +21,20 @@ const createRegistroFiscalizacion = async (
   fiscal_id,
   asociacion_id,
   chofer,
+  origen,
   destino,
   pasajeros,
   fecha_hora_registro,
 ) => {
   const res = await pool.query(
-    `INSERT INTO registros_fiscalizacion (unidad_id, fiscal_id, asociacion_id, chofer, destino, pasajeros, fecha_hora_registro)
-     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    `INSERT INTO registros_fiscalizacion (unidad_id, fiscal_id, asociacion_id, chofer, origen, destino, pasajeros, fecha_hora_registro)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
     [
       unidad_id,
       fiscal_id,
       asociacion_id,
       chofer,
+      origen,
       destino,
       pasajeros,
       fecha_hora_registro,

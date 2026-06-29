@@ -8,6 +8,9 @@ ALTER TABLE asociaciones
 ALTER TABLE unidades_transporte
   ADD COLUMN IF NOT EXISTS numero_unidad TEXT,
   ADD COLUMN IF NOT EXISTS numero_puestos INTEGER,
+  ADD COLUMN IF NOT EXISTS marca TEXT,
+  ADD COLUMN IF NOT EXISTS modelo TEXT,
+  ADD COLUMN IF NOT EXISTS ano INTEGER,
   ADD COLUMN IF NOT EXISTS color TEXT,
   ADD COLUMN IF NOT EXISTS uso TEXT,
   ADD COLUMN IF NOT EXISTS capacidad TEXT,
@@ -19,6 +22,9 @@ ALTER TABLE unidades_transporte
   ADD COLUMN IF NOT EXISTS numero_placa_asignada TEXT,
   ADD COLUMN IF NOT EXISTS fecha_emision DATE,
   ADD COLUMN IF NOT EXISTS chofer TEXT;
+
+ALTER TABLE registros_fiscalizacion
+  ADD COLUMN IF NOT EXISTS origen TEXT;
 
 CREATE TABLE IF NOT EXISTS asociacion_pagos (
   id SERIAL PRIMARY KEY,

@@ -24,6 +24,7 @@ router.post(
   body("unidad_id").isInt().withMessage("unidad_id must be integer"),
   body("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
   body("chofer").optional().isString(),
+  body("origen").optional().isString(),
   body("destino").optional().isString(),
   body("pasajeros").optional().isInt(),
   (req, res, next) => {
