@@ -63,7 +63,12 @@ const getUnidadesByAsociacion = async (asociacion_id) => {
        he.estado as ultimo_estado,
        owner.nombre AS propietario_nombre,
        owner.apellido AS propietario_apellido,
-       owner.email AS propietario_email
+       owner.email AS propietario_email,
+       last_trace.chofer AS ultimo_chofer,
+       last_trace.origen AS ultimo_origen,
+       last_trace.destino AS ultimo_destino,
+       last_trace.pasajeros AS ultimo_pasajeros,
+       last_trace.fecha_hora_registro AS ultima_fiscalizacion_fecha
      FROM unidades_transporte u
      LEFT JOIN usuarios owner ON owner.id = u.propietario_id
      LEFT JOIN (
@@ -72,6 +77,13 @@ const getUnidadesByAsociacion = async (asociacion_id) => {
        WHERE entidad_tipo='UNIDAD'
        ORDER BY entidad_id, created_at DESC
      ) he ON he.entidad_id = u.id
+     LEFT JOIN LATERAL (
+       SELECT rf.chofer, rf.origen, rf.destino, rf.pasajeros, rf.fecha_hora_registro
+       FROM registros_fiscalizacion rf
+       WHERE rf.unidad_id = u.id
+       ORDER BY rf.fecha_hora_registro DESC, rf.id DESC
+       LIMIT 1
+     ) last_trace ON true
      WHERE u.asociacion_id = $1`,
     [asociacion_id],
   );
