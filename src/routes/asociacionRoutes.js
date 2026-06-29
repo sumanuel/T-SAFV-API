@@ -57,6 +57,7 @@ router.post(
   body("nombre").isLength({ min: 2 }).withMessage("nombre too short"),
   body("email").isEmail().withMessage("Invalid email"),
   body("password")
+    .optional()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
   body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),

@@ -12,6 +12,11 @@ const create = async (req, res) => {
     );
     res.status(201).json(nuevaAsociacion);
   } catch (error) {
+    if (error.code === "ADMIN_ASSOCIATION_EXISTS") {
+      return res.status(409).json({
+        message: "Cada administrador solo puede crear una asociación.",
+      });
+    }
     // Manejo de errores específicos, como RIF duplicado
     if (error.code === "23505" && error.constraint === "asociaciones_rif_key") {
       return res.status(409).json({ message: "El RIF ya está registrado." });

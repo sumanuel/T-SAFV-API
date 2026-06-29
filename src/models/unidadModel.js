@@ -90,6 +90,36 @@ const createUnidad = async (
   }
 };
 
+const updateUnidad = async (
+  unidad_id,
+  asociacion_id,
+  propietario_id,
+  placa,
+  numero_unidad,
+  numero_puestos,
+) => {
+  const res = await pool.query(
+    `UPDATE unidades_transporte
+     SET propietario_id = $1,
+         placa = $2,
+         numero_unidad = $3,
+         numero_puestos = $4
+     WHERE id = $5 AND asociacion_id = $6
+     RETURNING *`,
+    [
+      propietario_id,
+      placa,
+      numero_unidad || null,
+      numero_puestos || null,
+      unidad_id,
+      asociacion_id,
+    ],
+  );
+
+  return res.rows[0] || null;
+};
+
 module.exports = {
   createUnidad,
+  updateUnidad,
 };

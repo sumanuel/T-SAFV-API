@@ -1,6 +1,7 @@
 const pool = require("../config/database");
 const historyModel = require("./historyModel");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 /**
  * Crea una nueva asociación y asigna al creador como el primer administrador.
@@ -23,6 +24,17 @@ const createAsociacion = async (datosAsociacion, adminId) => {
 
   try {
     await client.query("BEGIN");
+
+    const existingAssociationRes = await client.query(
+      `SELECT id FROM asociaciones WHERE creada_por = $1 LIMIT 1`,
+      [adminId],
+    );
+
+    if (existingAssociationRes.rows[0]) {
+      const error = new Error("Admin already has an association");
+      error.code = "ADMIN_ASSOCIATION_EXISTS";
+      throw error;
+    }
 
     // 1. Insertar la nueva asociación
     const asociacionRes = await client.query(
@@ -149,6 +161,8 @@ const getUserAssociations = async (userId) => {
      ) trace ON true
      WHERE m.usuario_id = $1
        AND COALESCE(he.estado, 'ACTIVO') <> 'INACTIVO'
+       AND a.habilitada = TRUE
+       AND (payment.fecha_hasta IS NULL OR payment.fecha_hasta >= CURRENT_DATE)
      ORDER BY a.id DESC`,
     [userId],
   );
@@ -376,7 +390,9 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
     let user = existingUserRes.rows[0];
 
     if (!user) {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const temporaryPassword =
+        password || crypto.randomBytes(12).toString("hex");
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
       const userRes = await client.query(
         `INSERT INTO usuarios (nombre, apellido, email, password, telefono, rif_cedula, direccion)
          VALUES ($1, $2, $3, $4, $5, $6, $7)

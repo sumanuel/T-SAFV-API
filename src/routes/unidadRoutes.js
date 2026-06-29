@@ -75,6 +75,28 @@ router.post(
   unidadController.create,
 );
 
+router.put(
+  "/asociaciones/:asociacion_id/unidades/:unidad_id",
+  isAsociacionAdmin,
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("unidad_id").isInt().withMessage("unidad_id must be integer"),
+  body("propietario_id").isInt().withMessage("propietario_id must be integer"),
+  body("placa").isString().notEmpty().withMessage("placa is required"),
+  body("numero_unidad")
+    .isString()
+    .notEmpty()
+    .withMessage("numero_unidad is required"),
+  body("numero_puestos").isInt().withMessage("numero_puestos must be integer"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  unidadController.update,
+);
+
 // Cambiar el estado de una unidad (solo admins)
 router.post(
   "/:unidad_id/state",

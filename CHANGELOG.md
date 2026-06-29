@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Alta directa de miembros**: Se corrige la creacion de propietarios y fiscales por asociacion. El flujo estaba evaluando un campo de rol incorrecto al decidir si debia vincular unidades de propietario, lo que disparaba error 500 despues de crear la membresia.
+- **Asociacion unica por administrador**: La creacion de asociaciones ahora rechaza nuevos intentos cuando el usuario ya posee una asociacion creada por el mismo.
+- **Visibilidad de asociaciones**: `GET /api/asociaciones/mine` ahora devuelve solo asociaciones habilitadas y vigentes para uso en la app.
+
+### Added
+
+- **Edicion de unidades**: Se agrega `PUT /api/unidades/asociaciones/:asociacion_id/unidades/:unidad_id` para actualizar propietario, placa, numero de unidad y numero de puestos desde la app.
 
 ### Notes
 

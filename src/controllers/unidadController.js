@@ -56,6 +56,32 @@ const create = async (req, res) => {
   }
 };
 
+const update = async (req, res) => {
+  const { unidad_id, asociacion_id } = req.params;
+  const { propietario_id, placa, numero_unidad, numero_puestos } = req.body;
+
+  try {
+    const unidad = await unidadModel.updateUnidad(
+      unidad_id,
+      asociacion_id,
+      propietario_id,
+      placa,
+      numero_unidad,
+      numero_puestos,
+    );
+
+    if (!unidad) {
+      return res.status(404).json({ message: "Unidad not found" });
+    }
+
+    res.json(unidad);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating unidad", error: error.message });
+  }
+};
+
 const changeState = async (req, res) => {
   const { unidad_id } = req.params;
   const { estado, motivo } = req.body;
@@ -83,5 +109,6 @@ const changeState = async (req, res) => {
 
 module.exports = {
   create,
+  update,
   changeState,
 };
