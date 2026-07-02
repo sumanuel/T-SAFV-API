@@ -66,12 +66,10 @@ const listByAssociation = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error listing association invitations",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error listing association invitations",
+      error: error.message,
+    });
   }
 };
 
@@ -82,6 +80,9 @@ const respond = async (req, res) => {
     const result = await invitacionModel.acceptInvitation(token, userId);
     res.json(result);
   } catch (error) {
+    if (error.code === "SINGLE_ASSOCIATION_VIOLATION") {
+      return res.status(409).json({ message: error.message });
+    }
     res.status(400).json({ message: error.message });
   }
 };

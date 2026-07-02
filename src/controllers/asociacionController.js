@@ -167,10 +167,46 @@ const createPayment = async (req, res) => {
   }
 };
 
+const listMineAll = async (req, res) => {
+  try {
+    const rows = await asociacionModel.getUserAssociationsAll(req.user.id);
+    res.json(rows);
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Error listing all associations",
+        error: error.message,
+      });
+  }
+};
+
+const activateTrial = async (req, res) => {
+  try {
+    const result = await asociacionModel.activateTrial(
+      req.params.asociacion_id,
+      req.user.id,
+    );
+    res.json(result);
+  } catch (error) {
+    if (error.code === "TRIAL_ALREADY_USED") {
+      return res.status(409).json({ message: error.message });
+    }
+    if (error.code === "NOT_FOUND") {
+      return res.status(404).json({ message: error.message });
+    }
+    res
+      .status(500)
+      .json({ message: "Error activando trial", error: error.message });
+  }
+};
+
 module.exports = {
   create,
   update,
   listMine,
+  listMineAll,
+  activateTrial,
   listMembers,
   createMember,
   updateMember,

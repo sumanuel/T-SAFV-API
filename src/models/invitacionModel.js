@@ -59,6 +59,34 @@ const acceptInvitation = async (token, userId) => {
     if (invitacion.expira_en && new Date(invitacion.expira_en) < new Date())
       throw new Error("Invitation expired");
 
+    // ADMIN y FISCAL solo pueden pertenecer a una asociación
+    if (
+      invitacion.rol_invitado === "ADMIN" ||
+      invitacion.rol_invitado === "FISCAL"
+    ) {
+      const existingRes = await client.query(
+        `SELECT m.id FROM membresias m
+         JOIN historial_estados he ON he.entidad_tipo = 'MEMBRESIA' AND he.entidad_id = m.id
+         WHERE m.usuario_id = $1
+         GROUP BY m.id
+         HAVING MAX(he.created_at) = (
+           SELECT created_at FROM historial_estados
+           WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
+           ORDER BY created_at DESC LIMIT 1
+         )
+         AND (SELECT estado FROM historial_estados WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id ORDER BY created_at DESC LIMIT 1) <> 'INACTIVO'
+         LIMIT 1`,
+        [userId],
+      );
+      if (existingRes.rows.length > 0) {
+        const error = new Error(
+          "El correo ya pertenece a otra asociación. ADMIN y FISCAL solo pueden pertenecer a una.",
+        );
+        error.code = "SINGLE_ASSOCIATION_VIOLATION";
+        throw error;
+      }
+    }
+
     await client.query(
       "UPDATE invitaciones SET estado = $1, aceptada_en = NOW() WHERE id = $2",
       ["ACEPTADA", invitacion.id],
@@ -91,9 +119,25 @@ const acceptInvitation = async (token, userId) => {
       );
     }
 
+    // Actualizar rol global del usuario si acepta como PROPIETARIO o FISCAL
+    if (
+      invitacion.rol_invitado === "PROPIETARIO" ||
+      invitacion.rol_invitado === "FISCAL"
+    ) {
+      await client.query("UPDATE usuarios SET rol = $1 WHERE id = $2", [
+        invitacion.rol_invitado,
+        userId,
+      ]);
+    }
+
     await client.query("COMMIT");
     const historial = histRes ? histRes.rows[0] : null;
-    return { invitacion, membresia, historial };
+    return {
+      invitacion,
+      membresia,
+      historial,
+      nuevoRol: invitacion.rol_invitado,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

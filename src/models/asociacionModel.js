@@ -102,8 +102,11 @@ const getUserAssociations = async (userId) => {
         payment.fecha_desde AS licencia_desde,
         payment.fecha_hasta AS licencia_hasta,
         payment.estado AS licencia_estado,
+        a.trial_inicio,
+        a.trial_fin,
         CASE
           WHEN a.habilitada = FALSE THEN FALSE
+          WHEN a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP THEN TRUE
           WHEN payment.fecha_hasta IS NULL THEN a.habilitada
           ELSE payment.fecha_hasta >= CURRENT_DATE
         END AS disponible_app
@@ -162,7 +165,11 @@ const getUserAssociations = async (userId) => {
      WHERE m.usuario_id = $1
        AND COALESCE(he.estado, 'ACTIVO') <> 'INACTIVO'
        AND a.habilitada = TRUE
-       AND (payment.fecha_hasta IS NULL OR payment.fecha_hasta >= CURRENT_DATE)
+       AND (
+         (a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP)
+         OR payment.fecha_hasta IS NULL
+         OR payment.fecha_hasta >= CURRENT_DATE
+       )
      ORDER BY a.id DESC`,
     [userId],
   );
@@ -610,9 +617,81 @@ const createAssociationPayment = async (asociacionId, payload, userId) => {
   return res.rows[0];
 };
 
+const activateTrial = async (asociacionId, adminId) => {
+  // Verifica que no haya trial ya usado ni pago vigente
+  const existing = await pool.query(
+    `SELECT trial_fin, id FROM asociaciones WHERE id = $1 AND creada_por = $2 LIMIT 1`,
+    [asociacionId, adminId],
+  );
+  const asoc = existing.rows[0];
+  if (!asoc) {
+    const err = new Error("Asociación no encontrada o sin permisos");
+    err.code = "NOT_FOUND";
+    throw err;
+  }
+  if (asoc.trial_fin) {
+    const err = new Error("El período de prueba ya fue utilizado");
+    err.code = "TRIAL_ALREADY_USED";
+    throw err;
+  }
+  const res = await pool.query(
+    `UPDATE asociaciones
+     SET trial_inicio = NOW(),
+         trial_fin = NOW() + INTERVAL '7 days'
+     WHERE id = $1
+     RETURNING id, trial_inicio, trial_fin`,
+    [asociacionId],
+  );
+  return res.rows[0];
+};
+
+// Devuelve TODAS las asociaciones del usuario, incluyendo expiradas (para modo solo-lectura)
+const getUserAssociationsAll = async (userId) => {
+  const res = await pool.query(
+    `SELECT
+        a.*,
+        m.id AS membresia_id,
+        m.rol,
+        COALESCE(he.estado, 'ACTIVO') AS estado_membresia,
+        payment.fecha_desde AS licencia_desde,
+        payment.fecha_hasta AS licencia_hasta,
+        payment.estado AS licencia_estado,
+        a.trial_inicio,
+        a.trial_fin,
+        CASE
+          WHEN a.habilitada = FALSE THEN FALSE
+          WHEN a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP THEN TRUE
+          WHEN payment.fecha_hasta IS NULL THEN a.habilitada
+          ELSE payment.fecha_hasta >= CURRENT_DATE
+        END AS disponible_app
+     FROM asociaciones a
+     JOIN membresias m ON m.asociacion_id = a.id
+     LEFT JOIN LATERAL (
+       SELECT estado
+       FROM historial_estados
+       WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
+       ORDER BY created_at DESC LIMIT 1
+     ) he ON true
+     LEFT JOIN LATERAL (
+       SELECT fecha_desde, fecha_hasta, estado
+       FROM asociacion_pagos ap
+       WHERE ap.asociacion_id = a.id
+       ORDER BY fecha_hasta DESC, id DESC LIMIT 1
+     ) payment ON true
+     WHERE m.usuario_id = $1
+       AND COALESCE(he.estado, 'ACTIVO') <> 'INACTIVO'
+       AND a.habilitada = TRUE
+     ORDER BY a.id DESC`,
+    [userId],
+  );
+  return res.rows;
+};
+
 module.exports = {
   createAsociacion,
   getUserAssociations,
+  getUserAssociationsAll,
+  activateTrial,
   updateAssociation,
   createAssociationMember,
   updateAssociationMember,

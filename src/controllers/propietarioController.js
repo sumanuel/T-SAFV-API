@@ -33,7 +33,44 @@ const getTrazabilidad = async (req, res) => {
   }
 };
 
+// Todas las unidades del propietario en sus asociaciones activas
+const getMyUnidadesAll = async (req, res) => {
+  try {
+    const rows = await propietarioModel.findMyUnidadesAllAssociations(
+      req.user.id,
+    );
+    res.json(rows);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching owner units", error: error.message });
+  }
+};
+
+// Trazabilidad cross-asociación del propietario
+const getMyTrazabilidadAll = async (req, res) => {
+  const { fecha_inicio, fecha_fin, buscar } = req.query;
+  try {
+    const rows = await propietarioModel.findMyTrazabilidadAllAssociations(
+      req.user.id,
+      fecha_inicio,
+      fecha_fin,
+      buscar,
+    );
+    res.json(rows);
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Error fetching owner traceability",
+        error: error.message,
+      });
+  }
+};
+
 module.exports = {
   getMyUnidades,
   getTrazabilidad,
+  getMyUnidadesAll,
+  getMyTrazabilidadAll,
 };

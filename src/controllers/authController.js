@@ -18,6 +18,9 @@ const register = async (req, res) => {
     });
     res.status(201).json({ message: "User created successfully", user });
   } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({ message: "El correo ya está registrado." });
+    }
     res
       .status(500)
       .json({ message: "Error creating user", error: error.message });
@@ -40,7 +43,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        rol: user.rol,
+        rol: user.rol || "ADMIN",
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
@@ -49,15 +52,14 @@ const login = async (req, res) => {
         direccion: user.direccion,
       },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      },
+      { expiresIn: "24h" },
     );
 
     res.json({
       token,
       user: {
         id: user.id,
+        rol: user.rol || "ADMIN",
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
@@ -71,7 +73,24 @@ const login = async (req, res) => {
   }
 };
 
+const updatePushToken = async (req, res) => {
+  const userId = req.user.id;
+  const { push_token } = req.body;
+  if (!push_token) {
+    return res.status(400).json({ message: "push_token requerido" });
+  }
+  try {
+    await userModel.updatePushToken(userId, push_token);
+    res.json({ message: "Push token actualizado" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error actualizando push token", error: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
+  updatePushToken,
 };

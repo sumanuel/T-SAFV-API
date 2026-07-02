@@ -19,4 +19,18 @@ router.get(
   propietarioController.getTrazabilidad,
 );
 
+// Cross-asociación: todas mis unidades en todas mis asociaciones activas
+router.get(
+  "/mis-unidades",
+  authMiddleware,
+  propietarioController.getMyUnidadesAll,
+);
+
+// Cross-asociación: toda mi trazabilidad en mis asociaciones activas
+router.get(
+  "/mi-trazabilidad",
+  authMiddleware,
+  propietarioController.getMyTrazabilidadAll,
+);
+
 module.exports = router;

@@ -20,7 +20,8 @@ const validate = (req, res, next) => {
 
 router.get("/mine", asociacionController.listMine);
 
-// Crear una nueva asociación
+// Incluye asociaciones expiradas para modo solo-lectura (ADMIN)
+router.get("/mine-all", asociacionController.listMineAll);
 router.post(
   "/",
   body("nombre")
@@ -120,6 +121,15 @@ router.post(
   validate,
   isAsociacionAdmin,
   asociacionController.createPayment,
+);
+
+// Activar período de prueba de 7 días (solo ADMIN de la asociación, una sola vez)
+router.post(
+  "/:asociacion_id/trial",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.activateTrial,
 );
 
 module.exports = router;

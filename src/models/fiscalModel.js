@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { sendPushNotification } = require("../services/notificationService");
 
 const findActiveUnidadesByAsociacion = async (asociacion_id) => {
   const res = await pool.query(
@@ -40,7 +41,36 @@ const createRegistroFiscalizacion = async (
       fecha_hora_registro,
     ],
   );
-  return res.rows[0];
+  const registro = res.rows[0];
+
+  // Notificar al propietario de la unidad
+  try {
+    const ownerRes = await pool.query(
+      `SELECT u.push_token, u.nombre, ut.placa, ut.numero_unidad
+       FROM unidades_transporte ut
+       JOIN usuarios u ON u.id = ut.propietario_id
+       WHERE ut.id = $1 LIMIT 1`,
+      [unidad_id],
+    );
+    const owner = ownerRes.rows[0];
+    if (owner?.push_token) {
+      const unitLabel =
+        owner.numero_unidad || owner.placa || `Unidad #${unidad_id}`;
+      await sendPushNotification(
+        owner.push_token,
+        "Unidad fiscalizada",
+        `Tu unidad ${unitLabel} fue registrada. Destino: ${destino || "no indicado"}.`,
+        { registro_id: registro.id, unidad_id, asociacion_id },
+      );
+    }
+  } catch (notifErr) {
+    console.error(
+      "Error enviando notificación al propietario:",
+      notifErr.message,
+    );
+  }
+
+  return registro;
 };
 
 module.exports = {

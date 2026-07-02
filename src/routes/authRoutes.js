@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const { body, validationResult } = require("express-validator");
+const { authMiddleware } = require("../middlewares/authMiddleware");
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -31,6 +32,15 @@ router.post(
   body("password").notEmpty().withMessage("Password required"),
   validate,
   authController.login,
+);
+
+// Registrar / actualizar push token del dispositivo
+router.patch(
+  "/push-token",
+  authMiddleware,
+  body("push_token").notEmpty().withMessage("push_token requerido"),
+  validate,
+  authController.updatePushToken,
 );
 
 module.exports = router;
