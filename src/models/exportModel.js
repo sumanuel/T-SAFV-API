@@ -12,10 +12,16 @@ const getMiembrosByAsociacion = async (asociacion_id) => {
        u.direccion,
        m.id AS membresia_id,
        m.rol,
+       COALESCE(owner_profile.estado_invitacion, fiscal_profile.estado_invitacion) AS estado_invitacion,
+       fiscal_profile.punto_control,
        COALESCE(he.estado, 'ACTIVO') AS estado_membresia,
        COALESCE(vehicle_data.linked_units, '[]'::json) AS linked_units
      FROM usuarios u
      JOIN membresias m ON m.usuario_id = u.id
+     LEFT JOIN propietarios owner_profile
+       ON owner_profile.asociacion_id = m.asociacion_id AND owner_profile.usuario_id = u.id
+     LEFT JOIN fiscales fiscal_profile
+       ON fiscal_profile.asociacion_id = m.asociacion_id AND fiscal_profile.usuario_id = u.id
      LEFT JOIN LATERAL (
        SELECT estado
        FROM historial_estados
@@ -76,10 +82,16 @@ const getMiembroDetalleByAsociacion = async (asociacion_id, membresia_id) => {
        u.direccion,
        m.id AS membresia_id,
        m.rol,
+       COALESCE(owner_profile.estado_invitacion, fiscal_profile.estado_invitacion) AS estado_invitacion,
+       fiscal_profile.punto_control,
        COALESCE(he.estado, 'ACTIVO') AS estado_membresia,
        COALESCE(vehicle_data.linked_units, '[]'::json) AS linked_units
      FROM usuarios u
      JOIN membresias m ON m.usuario_id = u.id
+     LEFT JOIN propietarios owner_profile
+       ON owner_profile.asociacion_id = m.asociacion_id AND owner_profile.usuario_id = u.id
+     LEFT JOIN fiscales fiscal_profile
+       ON fiscal_profile.asociacion_id = m.asociacion_id AND fiscal_profile.usuario_id = u.id
      LEFT JOIN LATERAL (
        SELECT estado
        FROM historial_estados

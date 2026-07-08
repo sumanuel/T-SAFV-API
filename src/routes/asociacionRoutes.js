@@ -77,6 +77,10 @@ router.post(
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
   body("punto_control").optional().isString(),
+  body("estado_invitacion")
+    .optional()
+    .isIn(["PENDIENTE_INVITACION", "INVITACION_ENVIADA", "ACEPTADA"])
+    .withMessage("Invalid invitation state"),
   body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
   validate,
   isAsociacionAdmin,
@@ -94,6 +98,10 @@ router.put(
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
   body("punto_control").optional().isString(),
+  body("estado_invitacion")
+    .optional()
+    .isIn(["PENDIENTE_INVITACION", "INVITACION_ENVIADA", "ACEPTADA"])
+    .withMessage("Invalid invitation state"),
   body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
   validate,
   isAsociacionAdmin,

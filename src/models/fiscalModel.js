@@ -27,9 +27,18 @@ const createRegistroFiscalizacion = async (
   pasajeros,
   fecha_hora_registro,
 ) => {
+  const fiscalProfileRes = await pool.query(
+    `SELECT punto_control
+     FROM fiscales
+     WHERE asociacion_id = $1 AND usuario_id = $2
+     LIMIT 1`,
+    [asociacion_id, fiscal_id],
+  );
+  const punto_control = fiscalProfileRes.rows[0]?.punto_control || null;
+
   const res = await pool.query(
-    `INSERT INTO registros_fiscalizacion (unidad_id, fiscal_id, asociacion_id, chofer, origen, destino, pasajeros, fecha_hora_registro)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    `INSERT INTO registros_fiscalizacion (unidad_id, fiscal_id, asociacion_id, chofer, origen, destino, pasajeros, fecha_hora_registro, punto_control)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
     [
       unidad_id,
       fiscal_id,
@@ -39,6 +48,7 @@ const createRegistroFiscalizacion = async (
       destino,
       pasajeros,
       fecha_hora_registro,
+      punto_control,
     ],
   );
   const registro = res.rows[0];

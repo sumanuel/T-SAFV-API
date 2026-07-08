@@ -59,6 +59,8 @@ const upsertRoleProfile = async (
   client,
   { asociacionId, membershipId, user, rol, payload },
 ) => {
+  const invitationState = payload.estado_invitacion || "PENDIENTE_INVITACION";
+
   if (rol === "PROPIETARIO") {
     await client.query(
       `DELETE FROM fiscales WHERE asociacion_id = $1 AND usuario_id = $2`,
@@ -74,8 +76,15 @@ const upsertRoleProfile = async (
          email,
          telefono,
          rif_cedula,
+         invitacion_enviada_at,
+         invitacion_aceptada_at,
          direccion,
-         estado_invitacion,
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+         CASE WHEN $10 = 'INVITACION_ENVIADA' THEN NOW() ELSE NULL END,
+         CASE WHEN $10 = 'ACEPTADA' THEN NOW() ELSE NULL END,
+         NOW()
+       )
          updated_at
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDIENTE_INVITACION', NOW())
        ON CONFLICT (asociacion_id, usuario_id)
@@ -85,6 +94,9 @@ const upsertRoleProfile = async (
          apellido = EXCLUDED.apellido,
          email = EXCLUDED.email,
          telefono = EXCLUDED.telefono,
+         estado_invitacion = EXCLUDED.estado_invitacion,
+         invitacion_enviada_at = CASE WHEN EXCLUDED.estado_invitacion = 'INVITACION_ENVIADA' THEN NOW() ELSE propietarios.invitacion_enviada_at END,
+         invitacion_aceptada_at = CASE WHEN EXCLUDED.estado_invitacion = 'ACEPTADA' THEN NOW() ELSE propietarios.invitacion_aceptada_at END,
          rif_cedula = EXCLUDED.rif_cedula,
          direccion = EXCLUDED.direccion,
          updated_at = NOW()`,
@@ -98,6 +110,7 @@ const upsertRoleProfile = async (
         payload.telefono || null,
         payload.rif_cedula || null,
         payload.direccion || null,
+        invitationState,
       ],
     );
     return;
@@ -121,8 +134,15 @@ const upsertRoleProfile = async (
          direccion,
          punto_control,
          estado_invitacion,
+         invitacion_enviada_at,
+         invitacion_aceptada_at,
          updated_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PENDIENTE_INVITACION', NOW())
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+         CASE WHEN $11 = 'INVITACION_ENVIADA' THEN NOW() ELSE NULL END,
+         CASE WHEN $11 = 'ACEPTADA' THEN NOW() ELSE NULL END,
+         NOW()
+       )
        ON CONFLICT (asociacion_id, usuario_id)
        DO UPDATE SET
          membresia_id = EXCLUDED.membresia_id,
@@ -133,6 +153,9 @@ const upsertRoleProfile = async (
          rif_cedula = EXCLUDED.rif_cedula,
          direccion = EXCLUDED.direccion,
          punto_control = EXCLUDED.punto_control,
+         estado_invitacion = EXCLUDED.estado_invitacion,
+         invitacion_enviada_at = CASE WHEN EXCLUDED.estado_invitacion = 'INVITACION_ENVIADA' THEN NOW() ELSE fiscales.invitacion_enviada_at END,
+         invitacion_aceptada_at = CASE WHEN EXCLUDED.estado_invitacion = 'ACEPTADA' THEN NOW() ELSE fiscales.invitacion_aceptada_at END,
          updated_at = NOW()`,
       [
         asociacionId,
@@ -145,6 +168,7 @@ const upsertRoleProfile = async (
         payload.rif_cedula || null,
         payload.direccion || null,
         payload.punto_control || null,
+        invitationState,
       ],
     );
   }
@@ -568,6 +592,7 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
     rif_cedula,
     direccion,
     punto_control,
+    estado_invitacion,
     rol,
     vehicles,
   } = payload;
@@ -660,6 +685,7 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
         rif_cedula,
         direccion,
         punto_control,
+        estado_invitacion,
       },
     });
 
@@ -700,6 +726,7 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
     rif_cedula,
     direccion,
     punto_control,
+    estado_invitacion,
     rol,
     vehicles,
   } = payload;
@@ -764,6 +791,7 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
         rif_cedula,
         direccion,
         punto_control,
+        estado_invitacion,
       },
     });
 
