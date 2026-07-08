@@ -17,6 +17,16 @@ const create = async (req, res) => {
         message: "Cada administrador solo puede crear una asociación.",
       });
     }
+    if (
+      [
+        "PROFILE_BLOCKED",
+        "PAYMENT_REQUIRED",
+        "TRIAL_ALREADY_USED",
+        "EXISTING_ASSOCIATION",
+      ].includes(error.code)
+    ) {
+      return res.status(403).json({ message: error.message, code: error.code });
+    }
     // Manejo de errores específicos, como RIF duplicado
     if (error.code === "23505" && error.constraint === "asociaciones_rif_key") {
       return res.status(409).json({ message: "El RIF ya está registrado." });

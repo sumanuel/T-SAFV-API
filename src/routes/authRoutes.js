@@ -34,6 +34,12 @@ router.post(
   authController.login,
 );
 
+router.get(
+  "/association-access",
+  authMiddleware,
+  authController.getAssociationCreationAccessCurrent,
+);
+
 // Registrar / actualizar push token del dispositivo
 router.patch(
   "/push-token",

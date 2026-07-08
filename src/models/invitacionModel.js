@@ -15,6 +15,29 @@ const createInvitacion = async (
      VALUES ($1, $2, $3, $4, 'PENDIENTE', $5, $6) RETURNING *`,
     [asociacion_id, email_invitado, rol_invitado, token, creada_por, expira_en],
   );
+
+  if (rol_invitado === "PROPIETARIO") {
+    await pool.query(
+      `UPDATE propietarios
+       SET estado_invitacion = 'INVITACION_ENVIADA',
+           invitacion_enviada_at = NOW(),
+           updated_at = NOW()
+       WHERE asociacion_id = $1 AND lower(email) = lower($2)`,
+      [asociacion_id, email_invitado],
+    );
+  }
+
+  if (rol_invitado === "FISCAL") {
+    await pool.query(
+      `UPDATE fiscales
+       SET estado_invitacion = 'INVITACION_ENVIADA',
+           invitacion_enviada_at = NOW(),
+           updated_at = NOW()
+       WHERE asociacion_id = $1 AND lower(email) = lower($2)`,
+      [asociacion_id, email_invitado],
+    );
+  }
+
   return res.rows[0];
 };
 
@@ -128,6 +151,28 @@ const acceptInvitation = async (token, userId) => {
         invitacion.rol_invitado,
         userId,
       ]);
+
+      if (invitacion.rol_invitado === "PROPIETARIO") {
+        await client.query(
+          `UPDATE propietarios
+           SET estado_invitacion = 'ACEPTADA',
+               invitacion_aceptada_at = NOW(),
+               updated_at = NOW()
+           WHERE asociacion_id = $1 AND usuario_id = $2`,
+          [invitacion.asociacion_id, userId],
+        );
+      }
+
+      if (invitacion.rol_invitado === "FISCAL") {
+        await client.query(
+          `UPDATE fiscales
+           SET estado_invitacion = 'ACEPTADA',
+               invitacion_aceptada_at = NOW(),
+               updated_at = NOW()
+           WHERE asociacion_id = $1 AND usuario_id = $2`,
+          [invitacion.asociacion_id, userId],
+        );
+      }
     }
 
     await client.query("COMMIT");

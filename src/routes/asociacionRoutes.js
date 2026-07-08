@@ -27,7 +27,13 @@ router.post(
   body("nombre")
     .isLength({ min: 3 })
     .withMessage("nombre must be at least 3 chars"),
-  body("rif").optional().isString().isLength({ min: 3 }),
+  body("rif").isString().isLength({ min: 3 }),
+  body("direccion_fiscal").isString().isLength({ min: 5 }),
+  body("email").isEmail().withMessage("Invalid association email"),
+  body("telefonos").isString().isLength({ min: 5 }),
+  body("logo_url").optional().isString(),
+  body("logo_data").optional().isString(),
+  body("redes_sociales").optional().isObject(),
   validate,
   asociacionController.create,
 );
@@ -70,6 +76,7 @@ router.post(
     .optional()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
+  body("punto_control").optional().isString(),
   body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
   validate,
   isAsociacionAdmin,
@@ -86,6 +93,7 @@ router.put(
     .optional()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
+  body("punto_control").optional().isString(),
   body("rol").isIn(["PROPIETARIO", "FISCAL"]).withMessage("Invalid role"),
   validate,
   isAsociacionAdmin,

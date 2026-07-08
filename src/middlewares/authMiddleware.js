@@ -50,6 +50,39 @@ const verifyMembershipInAssociation = async (usuarioId, asociacionId, role) => {
   );
   const latest = histRes.rows[0];
   if (latest && latest.estado === "INACTIVO") return false;
+
+  if (membresia.rol === "PROPIETARIO") {
+    const ownerRes = await pool.query(
+      `SELECT estado_invitacion
+       FROM propietarios
+       WHERE asociacion_id = $1 AND usuario_id = $2
+       LIMIT 1`,
+      [asociacionId, usuarioId],
+    );
+    if (
+      ownerRes.rows[0] &&
+      ownerRes.rows[0].estado_invitacion !== "ACEPTADA"
+    ) {
+      return false;
+    }
+  }
+
+  if (membresia.rol === "FISCAL") {
+    const fiscalRes = await pool.query(
+      `SELECT estado_invitacion
+       FROM fiscales
+       WHERE asociacion_id = $1 AND usuario_id = $2
+       LIMIT 1`,
+      [asociacionId, usuarioId],
+    );
+    if (
+      fiscalRes.rows[0] &&
+      fiscalRes.rows[0].estado_invitacion !== "ACEPTADA"
+    ) {
+      return false;
+    }
+  }
+
   return true;
 };
 

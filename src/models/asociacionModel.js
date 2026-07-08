@@ -2,6 +2,153 @@ const pool = require("../config/database");
 const historyModel = require("./historyModel");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const userModel = require("./userModel");
+
+const ACCEPTED_INVITATION_STATE = "ACEPTADA";
+
+const ensureAssociationCreationEntitlement = async (client, adminId, email) => {
+  const access = await userModel.getAssociationCreationAccess(
+    { userId: adminId, email },
+    client,
+  );
+
+  if (!access.allowed) {
+    const error = new Error(access.message);
+    error.code = access.reason_code;
+    throw error;
+  }
+
+  if (access.entitlement) {
+    return access.entitlement;
+  }
+
+  const entitlementRes = await client.query(
+    `INSERT INTO asociacion_pagos (
+       asociacion_id,
+       usuario_id,
+       monto,
+       moneda,
+       fecha_desde,
+       fecha_hasta,
+       referencia,
+       notas,
+       estado,
+       registrado_por_usuario_id,
+       es_trial
+     ) VALUES (
+       NULL,
+       $1,
+       NULL,
+       'USD',
+       CURRENT_DATE,
+       (CURRENT_DATE + INTERVAL '7 days')::date,
+       'TRIAL-AUTO',
+       'Período de prueba automático por primera asociación',
+       'ACTIVO',
+       $1,
+       TRUE
+     )
+     RETURNING *`,
+    [adminId],
+  );
+
+  return entitlementRes.rows[0];
+};
+
+const upsertRoleProfile = async (
+  client,
+  { asociacionId, membershipId, user, rol, payload },
+) => {
+  if (rol === "PROPIETARIO") {
+    await client.query(
+      `DELETE FROM fiscales WHERE asociacion_id = $1 AND usuario_id = $2`,
+      [asociacionId, user.id],
+    );
+    await client.query(
+      `INSERT INTO propietarios (
+         asociacion_id,
+         usuario_id,
+         membresia_id,
+         nombre,
+         apellido,
+         email,
+         telefono,
+         rif_cedula,
+         direccion,
+         estado_invitacion,
+         updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDIENTE_INVITACION', NOW())
+       ON CONFLICT (asociacion_id, usuario_id)
+       DO UPDATE SET
+         membresia_id = EXCLUDED.membresia_id,
+         nombre = EXCLUDED.nombre,
+         apellido = EXCLUDED.apellido,
+         email = EXCLUDED.email,
+         telefono = EXCLUDED.telefono,
+         rif_cedula = EXCLUDED.rif_cedula,
+         direccion = EXCLUDED.direccion,
+         updated_at = NOW()`,
+      [
+        asociacionId,
+        user.id,
+        membershipId,
+        payload.nombre,
+        payload.apellido || null,
+        payload.email,
+        payload.telefono || null,
+        payload.rif_cedula || null,
+        payload.direccion || null,
+      ],
+    );
+    return;
+  }
+
+  if (rol === "FISCAL") {
+    await client.query(
+      `DELETE FROM propietarios WHERE asociacion_id = $1 AND usuario_id = $2`,
+      [asociacionId, user.id],
+    );
+    await client.query(
+      `INSERT INTO fiscales (
+         asociacion_id,
+         usuario_id,
+         membresia_id,
+         nombre,
+         apellido,
+         email,
+         telefono,
+         rif_cedula,
+         direccion,
+         punto_control,
+         estado_invitacion,
+         updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PENDIENTE_INVITACION', NOW())
+       ON CONFLICT (asociacion_id, usuario_id)
+       DO UPDATE SET
+         membresia_id = EXCLUDED.membresia_id,
+         nombre = EXCLUDED.nombre,
+         apellido = EXCLUDED.apellido,
+         email = EXCLUDED.email,
+         telefono = EXCLUDED.telefono,
+         rif_cedula = EXCLUDED.rif_cedula,
+         direccion = EXCLUDED.direccion,
+         punto_control = EXCLUDED.punto_control,
+         updated_at = NOW()`,
+      [
+        asociacionId,
+        user.id,
+        membershipId,
+        payload.nombre,
+        payload.apellido || null,
+        payload.email,
+        payload.telefono || null,
+        payload.rif_cedula || null,
+        payload.direccion || null,
+        payload.punto_control || null,
+      ],
+    );
+  }
+};
 
 /**
  * Crea una nueva asociación y asigna al creador como el primer administrador.
@@ -17,6 +164,7 @@ const createAsociacion = async (datosAsociacion, adminId) => {
     direccion_fiscal,
     email,
     telefonos,
+    logo_url,
     logo_data,
     redes_sociales,
   } = datosAsociacion;
@@ -36,10 +184,29 @@ const createAsociacion = async (datosAsociacion, adminId) => {
       throw error;
     }
 
+    const adminUser = await userModel.findUserById(adminId);
+    const entitlement = await ensureAssociationCreationEntitlement(
+      client,
+      adminId,
+      adminUser?.email,
+    );
+
     // 1. Insertar la nueva asociación
     const asociacionRes = await client.query(
-      `INSERT INTO asociaciones (nombre, rif, direccion_fiscal, email, telefonos, logo_data, redes_sociales, creada_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO asociaciones (
+         nombre,
+         rif,
+         direccion_fiscal,
+         email,
+         telefonos,
+         logo_url,
+         logo_data,
+         redes_sociales,
+         creada_por,
+         trial_inicio,
+         trial_fin
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         nombre,
@@ -47,12 +214,23 @@ const createAsociacion = async (datosAsociacion, adminId) => {
         direccion_fiscal,
         email,
         telefonos,
+        logo_url || null,
         logo_data,
         redes_sociales,
         adminId,
+        entitlement.es_trial ? entitlement.fecha_desde : null,
+        entitlement.es_trial ? entitlement.fecha_hasta : null,
       ],
     );
     const nuevaAsociacion = asociacionRes.rows[0];
+
+    await client.query(
+      `UPDATE asociacion_pagos
+       SET asociacion_id = $1,
+           consumido_en = COALESCE(consumido_en, NOW())
+       WHERE id = $2`,
+      [nuevaAsociacion.id, entitlement.id],
+    );
 
     // 2. Crear la membresía para el administrador
     const membresiaRes = await client.query(
@@ -107,11 +285,14 @@ const getUserAssociations = async (userId) => {
         CASE
           WHEN a.habilitada = FALSE THEN FALSE
           WHEN a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP THEN TRUE
-          WHEN payment.fecha_hasta IS NULL THEN a.habilitada
           ELSE payment.fecha_hasta >= CURRENT_DATE
         END AS disponible_app
      FROM asociaciones a
      JOIN membresias m ON m.asociacion_id = a.id
+     LEFT JOIN propietarios owner_profile
+       ON owner_profile.asociacion_id = a.id AND owner_profile.usuario_id = m.usuario_id
+     LEFT JOIN fiscales fiscal_profile
+       ON fiscal_profile.asociacion_id = a.id AND fiscal_profile.usuario_id = m.usuario_id
      LEFT JOIN LATERAL (
        SELECT estado
        FROM historial_estados
@@ -164,10 +345,14 @@ const getUserAssociations = async (userId) => {
      ) trace ON true
      WHERE m.usuario_id = $1
        AND COALESCE(he.estado, 'ACTIVO') <> 'INACTIVO'
+       AND (
+         m.rol = 'ADMIN'
+         OR (m.rol = 'PROPIETARIO' AND COALESCE(owner_profile.estado_invitacion, 'PENDIENTE_INVITACION') = 'ACEPTADA')
+         OR (m.rol = 'FISCAL' AND COALESCE(fiscal_profile.estado_invitacion, 'PENDIENTE_INVITACION') = 'ACEPTADA')
+       )
        AND a.habilitada = TRUE
        AND (
          (a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP)
-         OR payment.fecha_hasta IS NULL
          OR payment.fecha_hasta >= CURRENT_DATE
        )
      ORDER BY a.id DESC`,
@@ -382,6 +567,7 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
     telefono,
     rif_cedula,
     direccion,
+    punto_control,
     rol,
     vehicles,
   } = payload;
@@ -461,6 +647,22 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
       [membership.id, "MEMBRESIA", "ACTIVO", "Creación directa", adminId],
     );
 
+    await upsertRoleProfile(client, {
+      asociacionId,
+      membershipId: membership.id,
+      user,
+      rol,
+      payload: {
+        nombre,
+        apellido,
+        email,
+        telefono,
+        rif_cedula,
+        direccion,
+        punto_control,
+      },
+    });
+
     const linkedUnits =
       rol === "PROPIETARIO"
         ? await createOwnerUnits(
@@ -497,6 +699,7 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
     telefono,
     rif_cedula,
     direccion,
+    punto_control,
     rol,
     vehicles,
   } = payload;
@@ -548,6 +751,22 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
       membresiaId,
     ]);
 
+    await upsertRoleProfile(client, {
+      asociacionId,
+      membershipId: membership.id,
+      user: { id: membership.user_id },
+      rol,
+      payload: {
+        nombre,
+        apellido,
+        email,
+        telefono,
+        rif_cedula,
+        direccion,
+        punto_control,
+      },
+    });
+
     const linkedUnits =
       rol === "PROPIETARIO"
         ? await upsertOwnerUnits(
@@ -595,6 +814,10 @@ const deleteAssociationMember = async (asociacionId, membresiaId) => {
     }
 
     if (membership.rol === "PROPIETARIO") {
+      await client.query(
+        `DELETE FROM propietarios WHERE asociacion_id = $1 AND usuario_id = $2`,
+        [asociacionId, membership.user_id],
+      );
       const unitsRes = await client.query(
         `SELECT id FROM unidades_transporte WHERE asociacion_id = $1 AND propietario_id = $2`,
         [asociacionId, membership.user_id],
@@ -611,6 +834,13 @@ const deleteAssociationMember = async (asociacionId, membresiaId) => {
       }
       await client.query(
         `DELETE FROM unidades_transporte WHERE asociacion_id = $1 AND propietario_id = $2`,
+        [asociacionId, membership.user_id],
+      );
+    }
+
+    if (membership.rol === "FISCAL") {
+      await client.query(
+        `DELETE FROM fiscales WHERE asociacion_id = $1 AND usuario_id = $2`,
         [asociacionId, membership.user_id],
       );
     }
@@ -702,6 +932,39 @@ const activateTrial = async (asociacionId, adminId) => {
      RETURNING id, trial_inicio, trial_fin`,
     [asociacionId],
   );
+
+  await pool.query(
+    `INSERT INTO asociacion_pagos (
+       asociacion_id,
+       usuario_id,
+       monto,
+       moneda,
+       fecha_desde,
+       fecha_hasta,
+       referencia,
+       notas,
+       estado,
+       registrado_por_usuario_id,
+       es_trial,
+       consumido_en
+     ) VALUES (
+       $1,
+       $2,
+       NULL,
+       'USD',
+       CURRENT_DATE,
+       (CURRENT_DATE + INTERVAL '7 days')::date,
+       'TRIAL-MANUAL',
+       'Activación manual de período de prueba',
+       'ACTIVO',
+       $2,
+       TRUE,
+       NOW()
+     )
+     ON CONFLICT DO NOTHING`,
+    [asociacionId, adminId],
+  );
+
   return res.rows[0];
 };
 
@@ -721,11 +984,14 @@ const getUserAssociationsAll = async (userId) => {
         CASE
           WHEN a.habilitada = FALSE THEN FALSE
           WHEN a.trial_fin IS NOT NULL AND a.trial_fin >= CURRENT_TIMESTAMP THEN TRUE
-          WHEN payment.fecha_hasta IS NULL THEN a.habilitada
           ELSE payment.fecha_hasta >= CURRENT_DATE
         END AS disponible_app
      FROM asociaciones a
      JOIN membresias m ON m.asociacion_id = a.id
+     LEFT JOIN propietarios owner_profile
+       ON owner_profile.asociacion_id = a.id AND owner_profile.usuario_id = m.usuario_id
+     LEFT JOIN fiscales fiscal_profile
+       ON fiscal_profile.asociacion_id = a.id AND fiscal_profile.usuario_id = m.usuario_id
      LEFT JOIN LATERAL (
        SELECT estado
        FROM historial_estados
@@ -740,6 +1006,11 @@ const getUserAssociationsAll = async (userId) => {
      ) payment ON true
      WHERE m.usuario_id = $1
        AND COALESCE(he.estado, 'ACTIVO') <> 'INACTIVO'
+       AND (
+         m.rol = 'ADMIN'
+         OR (m.rol = 'PROPIETARIO' AND COALESCE(owner_profile.estado_invitacion, 'PENDIENTE_INVITACION') = 'ACEPTADA')
+         OR (m.rol = 'FISCAL' AND COALESCE(fiscal_profile.estado_invitacion, 'PENDIENTE_INVITACION') = 'ACEPTADA')
+       )
        AND a.habilitada = TRUE
      ORDER BY a.id DESC`,
     [userId],
