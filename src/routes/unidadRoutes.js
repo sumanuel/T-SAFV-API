@@ -113,6 +113,21 @@ router.put(
   unidadController.update,
 );
 
+router.delete(
+  "/asociaciones/:asociacion_id/unidades/:unidad_id",
+  isAsociacionAdmin,
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("unidad_id").isInt().withMessage("unidad_id must be integer"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  unidadController.remove,
+);
+
 // Cambiar el estado de una unidad (solo admins)
 router.post(
   "/:unidad_id/state",

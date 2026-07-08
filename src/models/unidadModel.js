@@ -158,7 +158,46 @@ const updateUnidad = async (
   return res.rows[0] || null;
 };
 
+const deleteUnidad = async (unidad_id, asociacion_id) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const unidadRes = await client.query(
+      `SELECT * FROM unidades_transporte WHERE id = $1 AND asociacion_id = $2 LIMIT 1`,
+      [unidad_id, asociacion_id],
+    );
+    const unidad = unidadRes.rows[0];
+    if (!unidad) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    await client.query(
+      `DELETE FROM registros_fiscalizacion WHERE unidad_id = $1`,
+      [unidad_id],
+    );
+    await client.query(
+      `DELETE FROM historial_estados WHERE entidad_tipo = 'UNIDAD' AND entidad_id = $1`,
+      [unidad_id],
+    );
+    await client.query(
+      `DELETE FROM unidades_transporte WHERE id = $1 AND asociacion_id = $2`,
+      [unidad_id, asociacion_id],
+    );
+
+    await client.query("COMMIT");
+    return unidad;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   createUnidad,
   updateUnidad,
+  deleteUnidad,
 };

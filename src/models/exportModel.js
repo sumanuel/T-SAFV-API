@@ -48,12 +48,86 @@ const getMiembrosByAsociacion = async (asociacion_id) => {
          ORDER BY unit.numero_unidad NULLS LAST, unit.id
        ) AS linked_units
        FROM unidades_transporte unit
+       LEFT JOIN LATERAL (
+         SELECT estado
+         FROM historial_estados
+         WHERE entidad_tipo = 'UNIDAD' AND entidad_id = unit.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) unit_state ON true
        WHERE unit.propietario_id = u.id AND unit.asociacion_id = m.asociacion_id
+         AND COALESCE(unit_state.estado, 'ACTIVO') <> 'INACTIVO'
      ) vehicle_data ON true
      WHERE m.asociacion_id = $1`,
     [asociacion_id],
   );
   return res.rows;
+};
+
+const getMiembroDetalleByAsociacion = async (asociacion_id, membresia_id) => {
+  const res = await pool.query(
+    `SELECT
+       u.id,
+       u.nombre,
+       u.apellido,
+       u.email,
+       u.telefono,
+       u.rif_cedula,
+       u.direccion,
+       m.id AS membresia_id,
+       m.rol,
+       COALESCE(he.estado, 'ACTIVO') AS estado_membresia,
+       COALESCE(vehicle_data.linked_units, '[]'::json) AS linked_units
+     FROM usuarios u
+     JOIN membresias m ON m.usuario_id = u.id
+     LEFT JOIN LATERAL (
+       SELECT estado
+       FROM historial_estados
+       WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) he ON true
+     LEFT JOIN LATERAL (
+       SELECT json_agg(
+         json_build_object(
+           'id', unit.id,
+           'placa', unit.placa,
+           'ano', unit.ano,
+           'marca', unit.marca,
+           'modelo', unit.modelo,
+           'color', unit.color,
+           'uso', unit.uso,
+           'capacidad', unit.capacidad,
+           'serial_carroceria', unit.serial_carroceria,
+           'serial_motor', unit.serial_motor,
+           'numero_cilindros', unit.numero_cilindros,
+           'peso', unit.peso,
+           'numero_poliza_rcv', unit.numero_poliza_rcv,
+           'numero_placa_asignada', unit.numero_placa_asignada,
+           'fecha_emision', unit.fecha_emision,
+           'chofer', unit.chofer,
+           'numero_unidad', unit.numero_unidad,
+           'numero_puestos', unit.numero_puestos
+         )
+         ORDER BY unit.numero_unidad NULLS LAST, unit.id
+       ) AS linked_units
+       FROM unidades_transporte unit
+       LEFT JOIN LATERAL (
+         SELECT estado
+         FROM historial_estados
+         WHERE entidad_tipo = 'UNIDAD' AND entidad_id = unit.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) unit_state ON true
+       WHERE unit.propietario_id = u.id
+         AND unit.asociacion_id = m.asociacion_id
+         AND COALESCE(unit_state.estado, 'ACTIVO') <> 'INACTIVO'
+     ) vehicle_data ON true
+     WHERE m.asociacion_id = $1 AND m.id = $2
+     LIMIT 1`,
+    [asociacion_id, membresia_id],
+  );
+  return res.rows[0] || null;
 };
 
 const getUnidadesByAsociacion = async (asociacion_id) => {
@@ -112,6 +186,7 @@ const getTrazabilidadByAsociacion = async (
 
 module.exports = {
   getMiembrosByAsociacion,
+  getMiembroDetalleByAsociacion,
   getUnidadesByAsociacion,
   getTrazabilidadByAsociacion,
 };

@@ -574,6 +574,66 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
   }
 };
 
+const deleteAssociationMember = async (asociacionId, membresiaId) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const membershipRes = await client.query(
+      `SELECT m.*, u.id AS user_id
+       FROM membresias m
+       JOIN usuarios u ON u.id = m.usuario_id
+       WHERE m.id = $1 AND m.asociacion_id = $2
+       LIMIT 1`,
+      [membresiaId, asociacionId],
+    );
+    const membership = membershipRes.rows[0];
+    if (!membership) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    if (membership.rol === "PROPIETARIO") {
+      const unitsRes = await client.query(
+        `SELECT id FROM unidades_transporte WHERE asociacion_id = $1 AND propietario_id = $2`,
+        [asociacionId, membership.user_id],
+      );
+      for (const unit of unitsRes.rows) {
+        await client.query(
+          `DELETE FROM registros_fiscalizacion WHERE unidad_id = $1`,
+          [unit.id],
+        );
+        await client.query(
+          `DELETE FROM historial_estados WHERE entidad_tipo = 'UNIDAD' AND entidad_id = $1`,
+          [unit.id],
+        );
+      }
+      await client.query(
+        `DELETE FROM unidades_transporte WHERE asociacion_id = $1 AND propietario_id = $2`,
+        [asociacionId, membership.user_id],
+      );
+    }
+
+    await client.query(
+      `DELETE FROM historial_estados WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = $1`,
+      [membresiaId],
+    );
+    await client.query(
+      `DELETE FROM membresias WHERE id = $1 AND asociacion_id = $2`,
+      [membresiaId, asociacionId],
+    );
+
+    await client.query("COMMIT");
+    return membership;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const listAssociationPayments = async (asociacionId) => {
   const res = await pool.query(
     `SELECT * FROM asociacion_pagos
@@ -695,6 +755,7 @@ module.exports = {
   updateAssociation,
   createAssociationMember,
   updateAssociationMember,
+  deleteAssociationMember,
   createOwnerUnits,
   upsertOwnerUnits,
   listAssociationPayments,

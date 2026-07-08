@@ -71,6 +71,24 @@ const listMembers = async (req, res) => {
   }
 };
 
+const getMemberDetail = async (req, res) => {
+  try {
+    const row = await exportModel.getMiembroDetalleByAsociacion(
+      req.params.asociacion_id,
+      req.params.membresia_id,
+    );
+    if (!row) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.json(row);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error loading association member",
+      error: error.message,
+    });
+  }
+};
+
 const createMember = async (req, res) => {
   try {
     const row = await asociacionModel.createAssociationMember(
@@ -109,12 +127,31 @@ const updateMember = async (req, res) => {
   }
 };
 
+const deleteMember = async (req, res) => {
+  try {
+    const row = await asociacionModel.deleteAssociationMember(
+      req.params.asociacion_id,
+      req.params.membresia_id,
+    );
+    if (!row) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.json({ message: "Member deleted", member: row });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error deleting member", error: error.message });
+  }
+};
+
 const listUnits = async (req, res) => {
+  console.log("Fetching units for association:", req.params.asociacion_id);
   try {
     const rows = await exportModel.getUnidadesByAsociacion(
       req.params.asociacion_id,
     );
     res.json(rows);
+    console.log("Units fetched successfully:", rows);
   } catch (error) {
     res.status(500).json({
       message: "Error listing association units",
@@ -172,12 +209,10 @@ const listMineAll = async (req, res) => {
     const rows = await asociacionModel.getUserAssociationsAll(req.user.id);
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error listing all associations",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error listing all associations",
+      error: error.message,
+    });
   }
 };
 
@@ -208,8 +243,10 @@ module.exports = {
   listMineAll,
   activateTrial,
   listMembers,
+  getMemberDetail,
   createMember,
   updateMember,
+  deleteMember,
   listUnits,
   listTraceability,
   listPayments,

@@ -138,8 +138,25 @@ const changeState = async (req, res) => {
   }
 };
 
+const remove = async (req, res) => {
+  const { unidad_id, asociacion_id } = req.params;
+
+  try {
+    const unidad = await unidadModel.deleteUnidad(unidad_id, asociacion_id);
+    if (!unidad) {
+      return res.status(404).json({ message: "Unidad not found" });
+    }
+    res.json({ message: "Unidad deleted", unidad });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error deleting unidad", error: error.message });
+  }
+};
+
 module.exports = {
   create,
   update,
   changeState,
+  remove,
 };

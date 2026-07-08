@@ -52,6 +52,15 @@ router.get(
   asociacionController.listMembers,
 );
 
+router.get(
+  "/:asociacion_id/miembros/:membresia_id",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("membresia_id").isInt().withMessage("membresia_id must be integer"),
+  validate,
+  isAssociationMember,
+  asociacionController.getMemberDetail,
+);
+
 router.post(
   "/:asociacion_id/miembros",
   param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
@@ -81,6 +90,15 @@ router.put(
   validate,
   isAsociacionAdmin,
   asociacionController.updateMember,
+);
+
+router.delete(
+  "/:asociacion_id/miembros/:membresia_id",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("membresia_id").isInt().withMessage("membresia_id must be integer"),
+  validate,
+  isAsociacionAdmin,
+  asociacionController.deleteMember,
 );
 
 router.get(
