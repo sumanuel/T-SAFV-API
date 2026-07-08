@@ -88,7 +88,7 @@ const acceptInvitation = async (token, userId) => {
       invitacion.rol_invitado === "FISCAL"
     ) {
       const existingRes = await client.query(
-        `SELECT m.id FROM membresias m
+        `SELECT m.id, m.asociacion_id, m.rol FROM membresias m
          JOIN historial_estados he ON he.entidad_tipo = 'MEMBRESIA' AND he.entidad_id = m.id
          WHERE m.usuario_id = $1
          GROUP BY m.id
@@ -101,7 +101,12 @@ const acceptInvitation = async (token, userId) => {
          LIMIT 1`,
         [userId],
       );
-      if (existingRes.rows.length > 0) {
+      const existingMembership = existingRes.rows[0];
+      if (
+        existingMembership &&
+        Number(existingMembership.asociacion_id) !==
+          Number(invitacion.asociacion_id)
+      ) {
         const error = new Error(
           "El correo ya pertenece a otra asociación. ADMIN y FISCAL solo pueden pertenecer a una.",
         );
@@ -140,6 +145,35 @@ const acceptInvitation = async (token, userId) => {
           userId,
         ],
       );
+    } else {
+      await client.query(
+        `UPDATE membresias
+         SET rol = $1
+         WHERE id = $2`,
+        [invitacion.rol_invitado, membresia.id],
+      );
+
+      const latestStateRes = await client.query(
+        `SELECT estado
+         FROM historial_estados
+         WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [membresia.id],
+      );
+
+      if (latestStateRes.rows[0]?.estado !== "ACTIVO") {
+        histRes = await client.query(
+          "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+          [
+            membresia.id,
+            "MEMBRESIA",
+            "ACTIVO",
+            "Aceptación de invitación",
+            userId,
+          ],
+        );
+      }
     }
 
     // Actualizar rol global del usuario si acepta como PROPIETARIO o FISCAL
