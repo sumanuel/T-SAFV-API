@@ -59,10 +59,7 @@ const verifyMembershipInAssociation = async (usuarioId, asociacionId, role) => {
        LIMIT 1`,
       [asociacionId, usuarioId],
     );
-    if (
-      ownerRes.rows[0] &&
-      ownerRes.rows[0].estado_invitacion !== "ACEPTADA"
-    ) {
+    if (ownerRes.rows[0] && ownerRes.rows[0].estado_invitacion !== "ACEPTADA") {
       return false;
     }
   }

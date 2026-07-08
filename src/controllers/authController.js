@@ -55,7 +55,8 @@ const register = async (req, res) => {
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({
-        message: "El correo ya está registrado. Si fue creado por una asociación, espera la invitación oficial o usa ese mismo correo para activar tu cuenta.",
+        message:
+          "El correo ya está registrado. Si fue creado por una asociación, espera la invitación oficial o usa ese mismo correo para activar tu cuenta.",
       });
     }
     res

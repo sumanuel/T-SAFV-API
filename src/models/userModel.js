@@ -37,7 +37,9 @@ const findUserByEmail = async (email) => {
 };
 
 const findUserById = async (userId) => {
-  const res = await pool.query("SELECT * FROM usuarios WHERE id = $1", [userId]);
+  const res = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
+    userId,
+  ]);
   return res.rows[0] || null;
 };
 
@@ -132,9 +134,10 @@ const getAssociationCreationAccess = async ({ userId, email }, db = pool) => {
   const today = new Date();
   const hasValidPayment = Boolean(
     entitlement &&
-      entitlement.estado !== "INACTIVO" &&
-      entitlement.fecha_hasta &&
-      new Date(entitlement.fecha_hasta) >= new Date(today.toISOString().slice(0, 10)),
+    entitlement.estado !== "INACTIVO" &&
+    entitlement.fecha_hasta &&
+    new Date(entitlement.fecha_hasta) >=
+      new Date(today.toISOString().slice(0, 10)),
   );
 
   if (hasValidPayment) {
@@ -175,7 +178,9 @@ const getAssociationCreationAccess = async ({ userId, email }, db = pool) => {
     can_start_trial: false,
     has_valid_payment: false,
     trial_used: Boolean(trialUsedRes.rows[0]),
-    reason_code: entitlement.es_trial ? "TRIAL_ALREADY_USED" : "PAYMENT_REQUIRED",
+    reason_code: entitlement.es_trial
+      ? "TRIAL_ALREADY_USED"
+      : "PAYMENT_REQUIRED",
     preregistered_role: null,
     preregistered_association_name: null,
     invitation_state: null,
