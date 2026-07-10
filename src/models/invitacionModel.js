@@ -43,7 +43,14 @@ const createInvitacion = async (
 
 const findPendingByEmail = async (email) => {
   const res = await pool.query(
-    "SELECT * FROM invitaciones WHERE email_invitado = $1 AND estado = $2",
+    `SELECT
+       i.*,
+       a.nombre AS asociacion_nombre,
+       a.rif AS asociacion_rif
+     FROM invitaciones i
+     JOIN asociaciones a ON a.id = i.asociacion_id
+     WHERE lower(i.email_invitado) = lower($1) AND i.estado = $2
+     ORDER BY i.created_at DESC NULLS LAST, i.id DESC`,
     [email, "PENDIENTE"],
   );
   return res.rows;
@@ -88,7 +95,8 @@ const acceptInvitation = async (token, userId) => {
       invitacion.rol_invitado === "FISCAL"
     ) {
       const existingRes = await client.query(
-        `SELECT m.id, m.asociacion_id, m.rol FROM membresias m
+        `SELECT m.id, m.asociacion_id, m.rol
+         FROM membresias m
          JOIN historial_estados he ON he.entidad_tipo = 'MEMBRESIA' AND he.entidad_id = m.id
          WHERE m.usuario_id = $1
          GROUP BY m.id
@@ -97,7 +105,12 @@ const acceptInvitation = async (token, userId) => {
            WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
            ORDER BY created_at DESC LIMIT 1
          )
-         AND (SELECT estado FROM historial_estados WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id ORDER BY created_at DESC LIMIT 1) <> 'INACTIVO'
+         AND (
+           SELECT estado
+           FROM historial_estados
+           WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = m.id
+           ORDER BY created_at DESC LIMIT 1
+         ) <> 'INACTIVO'
          LIMIT 1`,
         [userId],
       );
@@ -173,6 +186,35 @@ const acceptInvitation = async (token, userId) => {
             userId,
           ],
         );
+      } else {
+        await client.query(
+          `UPDATE membresias
+           SET rol = $1
+           WHERE id = $2`,
+          [invitacion.rol_invitado, membresia.id],
+        );
+
+        const latestStateRes = await client.query(
+          `SELECT estado
+           FROM historial_estados
+           WHERE entidad_tipo = 'MEMBRESIA' AND entidad_id = $1
+           ORDER BY created_at DESC
+           LIMIT 1`,
+          [membresia.id],
+        );
+
+        if (latestStateRes.rows[0]?.estado !== "ACTIVO") {
+          histRes = await client.query(
+            "INSERT INTO historial_estados (entidad_id, entidad_tipo, estado, motivo, cambiado_por_usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [
+              membresia.id,
+              "MEMBRESIA",
+              "ACTIVO",
+              "Aceptación de invitación",
+              userId,
+            ],
+          );
+        }
       }
     }
 
