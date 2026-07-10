@@ -58,12 +58,61 @@ const findPendingByEmail = async (email) => {
 
 const findByAssociation = async (asociacionId) => {
   const res = await pool.query(
-    `SELECT * FROM invitaciones
+    `SELECT i.*, a.nombre AS asociacion_nombre
+     FROM invitaciones i
+     JOIN asociaciones a ON a.id = i.asociacion_id
      WHERE asociacion_id = $1
      ORDER BY created_at DESC NULLS LAST, id DESC`,
     [asociacionId],
   );
   return res.rows;
+};
+
+const cancelInvitation = async (invitationId, asociacionId) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const invitationRes = await client.query(
+      `UPDATE invitaciones
+       SET estado = 'CANCELADA'
+       WHERE id = $1 AND asociacion_id = $2 AND estado = 'PENDIENTE'
+       RETURNING *`,
+      [invitationId, asociacionId],
+    );
+    const invitation = invitationRes.rows[0] || null;
+    if (!invitation) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    if (invitation.rol_invitado === "PROPIETARIO") {
+      await client.query(
+        `UPDATE propietarios
+         SET estado_invitacion = 'PENDIENTE_INVITACION',
+             updated_at = NOW()
+         WHERE asociacion_id = $1 AND lower(email) = lower($2)`,
+        [asociacionId, invitation.email_invitado],
+      );
+    }
+
+    if (invitation.rol_invitado === "FISCAL") {
+      await client.query(
+        `UPDATE fiscales
+         SET estado_invitacion = 'PENDIENTE_INVITACION',
+             updated_at = NOW()
+         WHERE asociacion_id = $1 AND lower(email) = lower($2)`,
+        [asociacionId, invitation.email_invitado],
+      );
+    }
+
+    await client.query("COMMIT");
+    return invitation;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 const findByToken = async (token) => {
@@ -272,5 +321,6 @@ module.exports = {
   findPendingByEmail,
   findByAssociation,
   findByToken,
+  cancelInvitation,
   acceptInvitation,
 };

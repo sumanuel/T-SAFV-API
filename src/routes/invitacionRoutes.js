@@ -38,6 +38,13 @@ router.get(
   invitacionController.listByAssociation,
 );
 
+router.delete(
+  "/asociaciones/:asociacion_id/:invitacion_id",
+  authMiddleware,
+  isAsociacionAdmin,
+  invitacionController.cancel,
+);
+
 // Responder (aceptar) invitación
 router.post("/respond", authMiddleware, invitacionController.respond);
 

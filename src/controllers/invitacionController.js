@@ -73,6 +73,24 @@ const listByAssociation = async (req, res) => {
   }
 };
 
+const cancel = async (req, res) => {
+  try {
+    const invitation = await invitacionModel.cancelInvitation(
+      req.params.invitacion_id,
+      req.params.asociacion_id,
+    );
+    if (!invitation) {
+      return res.status(404).json({ message: "Invitation not found" });
+    }
+    res.json({ message: "Invitation cancelled", invitation });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error cancelling invitation",
+      error: error.message,
+    });
+  }
+};
+
 const respond = async (req, res) => {
   const { token } = req.body;
   const userId = req.user.id;
@@ -91,5 +109,6 @@ module.exports = {
   create,
   listMy,
   listByAssociation,
+  cancel,
   respond,
 };
