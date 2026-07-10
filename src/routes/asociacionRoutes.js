@@ -45,6 +45,12 @@ router.put(
     .isLength({ min: 3 })
     .withMessage("nombre must be at least 3 chars"),
   body("rif").optional().isString(),
+  body("direccion_fiscal").optional().isString(),
+  body("email").optional().isEmail().withMessage("Invalid association email"),
+  body("telefonos").optional().isString(),
+  body("logo_url").optional().isString(),
+  body("logo_data").optional().isString(),
+  body("redes_sociales").optional().isObject(),
   validate,
   isAsociacionAdmin,
   asociacionController.update,

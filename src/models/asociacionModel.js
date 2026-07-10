@@ -393,6 +393,7 @@ const updateAssociation = async (asociacionId, payload) => {
     direccion_fiscal,
     email,
     telefonos,
+    logo_url,
     logo_data,
     redes_sociales,
     habilitada,
@@ -405,10 +406,11 @@ const updateAssociation = async (asociacionId, payload) => {
          direccion_fiscal = $3,
          email = $4,
          telefonos = $5,
-         logo_data = $6,
-         redes_sociales = $7,
-         habilitada = COALESCE($8, habilitada)
-     WHERE id = $9
+         logo_url = $6,
+         logo_data = $7,
+         redes_sociales = $8,
+         habilitada = COALESCE($9, habilitada)
+     WHERE id = $10
      RETURNING *`,
     [
       nombre,
@@ -416,6 +418,7 @@ const updateAssociation = async (asociacionId, payload) => {
       direccion_fiscal || null,
       email || null,
       telefonos || null,
+      logo_url || null,
       logo_data || null,
       redes_sociales || null,
       typeof habilitada === "boolean" ? habilitada : null,
