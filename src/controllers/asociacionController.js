@@ -148,6 +148,9 @@ const deleteMember = async (req, res) => {
     }
     res.json({ message: "Member deleted", member: row });
   } catch (error) {
+    if (error.code === "ASSOCIATION_CREATOR_PROTECTED") {
+      return res.status(403).json({ message: error.message, code: error.code });
+    }
     res
       .status(500)
       .json({ message: "Error deleting member", error: error.message });

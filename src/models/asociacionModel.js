@@ -76,17 +76,17 @@ const upsertRoleProfile = async (
          email,
          telefono,
          rif_cedula,
+         direccion,
+         estado_invitacion,
          invitacion_enviada_at,
          invitacion_aceptada_at,
-         direccion,
+         updated_at
        ) VALUES (
          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
          CASE WHEN $10 = 'INVITACION_ENVIADA' THEN NOW() ELSE NULL END,
          CASE WHEN $10 = 'ACEPTADA' THEN NOW() ELSE NULL END,
          NOW()
        )
-         updated_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDIENTE_INVITACION', NOW())
        ON CONFLICT (asociacion_id, usuario_id)
        DO UPDATE SET
          membresia_id = EXCLUDED.membresia_id,
@@ -842,6 +842,18 @@ const deleteAssociationMember = async (asociacionId, membresiaId) => {
     if (!membership) {
       await client.query("ROLLBACK");
       return null;
+    }
+
+    const associationRes = await client.query(
+      `SELECT creada_por FROM asociaciones WHERE id = $1 LIMIT 1`,
+      [asociacionId],
+    );
+    if (associationRes.rows[0]?.creada_por === membership.user_id) {
+      const error = new Error(
+        "El creador de la asociación no se puede dar de baja.",
+      );
+      error.code = "ASSOCIATION_CREATOR_PROTECTED";
+      throw error;
     }
 
     if (membership.rol === "PROPIETARIO") {
