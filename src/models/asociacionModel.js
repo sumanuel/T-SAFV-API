@@ -824,6 +824,88 @@ const updateAssociationMember = async (asociacionId, membresiaId, payload) => {
   }
 };
 
+const updateOwnerSelfMember = async (
+  asociacionId,
+  membresiaId,
+  userId,
+  payload,
+) => {
+  const { nombre, apellido, email, telefono, rif_cedula, direccion } = payload;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const membershipRes = await client.query(
+      `SELECT m.id, m.usuario_id, m.rol
+       FROM membresias m
+       WHERE m.id = $1 AND m.asociacion_id = $2 AND m.usuario_id = $3
+       LIMIT 1`,
+      [membresiaId, asociacionId, userId],
+    );
+    const membership = membershipRes.rows[0];
+    if (!membership || membership.rol !== "PROPIETARIO") {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const userRes = await client.query(
+      `UPDATE usuarios
+       SET nombre = $1,
+           apellido = $2,
+           email = $3,
+           telefono = $4,
+           rif_cedula = $5,
+           direccion = $6
+       WHERE id = $7
+       RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion`,
+      [
+        nombre,
+        apellido || null,
+        email,
+        telefono || null,
+        rif_cedula || null,
+        direccion || null,
+        membership.usuario_id,
+      ],
+    );
+
+    await client.query(
+      `UPDATE propietarios
+       SET nombre = $1,
+           apellido = $2,
+           email = $3,
+           telefono = $4,
+           rif_cedula = $5,
+           direccion = $6,
+           updated_at = NOW()
+       WHERE asociacion_id = $7 AND usuario_id = $8`,
+      [
+        nombre,
+        apellido || null,
+        email,
+        telefono || null,
+        rif_cedula || null,
+        direccion || null,
+        asociacionId,
+        membership.usuario_id,
+      ],
+    );
+
+    await client.query("COMMIT");
+    return {
+      ...userRes.rows[0],
+      membresia_id: Number(membresiaId),
+      rol: "PROPIETARIO",
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const deleteAssociationMember = async (asociacionId, membresiaId) => {
   const client = await pool.connect();
 
@@ -1069,6 +1151,7 @@ module.exports = {
   updateAssociation,
   createAssociationMember,
   updateAssociationMember,
+  updateOwnerSelfMember,
   deleteAssociationMember,
   createOwnerUnits,
   upsertOwnerUnits,

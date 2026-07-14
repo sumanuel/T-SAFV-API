@@ -4,7 +4,9 @@ const asociacionController = require("../controllers/asociacionController");
 const {
   authMiddleware,
   isAssociationMember,
+  isAssociationCreator,
   isAsociacionAdmin,
+  isPropietario,
 } = require("../middlewares/authMiddleware");
 const { body, param, validationResult } = require("express-validator");
 
@@ -52,7 +54,7 @@ router.put(
   body("logo_data").optional().isString(),
   body("redes_sociales").optional().isObject(),
   validate,
-  isAsociacionAdmin,
+  isAssociationCreator,
   asociacionController.update,
 );
 
@@ -112,6 +114,20 @@ router.put(
   validate,
   isAsociacionAdmin,
   asociacionController.updateMember,
+);
+
+router.put(
+  "/:asociacion_id/miembros/:membresia_id/self",
+  param("asociacion_id").isInt().withMessage("asociacion_id must be integer"),
+  param("membresia_id").isInt().withMessage("membresia_id must be integer"),
+  body("nombre").isLength({ min: 2 }).withMessage("nombre too short"),
+  body("email").isEmail().withMessage("Invalid email"),
+  body("telefono").optional().isString(),
+  body("rif_cedula").optional().isString(),
+  body("direccion").optional().isString(),
+  validate,
+  isPropietario,
+  asociacionController.updateOwnMember,
 );
 
 router.delete(

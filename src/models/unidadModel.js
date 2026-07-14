@@ -158,6 +158,73 @@ const updateUnidad = async (
   return res.rows[0] || null;
 };
 
+const updateMyUnidad = async (
+  unidad_id,
+  asociacion_id,
+  propietario_id,
+  placa,
+  marca,
+  modelo,
+  ano,
+  numero_unidad,
+  numero_puestos,
+  color,
+  capacidad,
+  serial_carroceria,
+  serial_motor,
+  numero_cilindros,
+  peso,
+  numero_poliza_rcv,
+  numero_placa_asignada,
+  fecha_emision,
+  chofer,
+) => {
+  const res = await pool.query(
+    `UPDATE unidades_transporte
+     SET placa = $1,
+         marca = $2,
+         modelo = $3,
+         ano = $4,
+         numero_unidad = $5,
+         numero_puestos = $6,
+         color = $7,
+         capacidad = $8,
+         serial_carroceria = $9,
+         serial_motor = $10,
+         numero_cilindros = $11,
+         peso = $12,
+         numero_poliza_rcv = $13,
+         numero_placa_asignada = $14,
+         fecha_emision = $15,
+         chofer = $16
+     WHERE id = $17 AND asociacion_id = $18 AND propietario_id = $19
+     RETURNING *`,
+    [
+      placa,
+      marca || null,
+      modelo || null,
+      ano || null,
+      numero_unidad || null,
+      numero_puestos || null,
+      color || null,
+      capacidad || null,
+      serial_carroceria || null,
+      serial_motor || null,
+      numero_cilindros || null,
+      peso || null,
+      numero_poliza_rcv || null,
+      numero_placa_asignada || null,
+      fecha_emision || null,
+      chofer || null,
+      unidad_id,
+      asociacion_id,
+      propietario_id,
+    ],
+  );
+
+  return res.rows[0] || null;
+};
+
 const deleteUnidad = async (unidad_id, asociacion_id) => {
   const client = await pool.connect();
   try {
@@ -199,5 +266,6 @@ const deleteUnidad = async (unidad_id, asociacion_id) => {
 module.exports = {
   createUnidad,
   updateUnidad,
+  updateMyUnidad,
   deleteUnidad,
 };

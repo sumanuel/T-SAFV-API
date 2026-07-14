@@ -136,6 +136,39 @@ const isAsociacionAdmin = async (req, res, next) => {
   }
 };
 
+const isAssociationCreator = async (req, res, next) => {
+  const usuarioId = req.user && req.user.id;
+  const asociacionId =
+    req.params.asociacion_id ||
+    req.body.asociacion_id ||
+    req.query.asociacion_id;
+
+  if (!usuarioId || !asociacionId) {
+    return res.status(400).json({ message: "Missing association or user" });
+  }
+
+  try {
+    const resAssoc = await pool.query(
+      `SELECT creada_por FROM asociaciones WHERE id = $1 LIMIT 1`,
+      [asociacionId],
+    );
+    if (!resAssoc.rows[0]) {
+      return res.status(404).json({ message: "Association not found" });
+    }
+    if (Number(resAssoc.rows[0].creada_por) !== Number(usuarioId)) {
+      return res.status(403).json({
+        message: "Forbidden: Only the association creator can update this data",
+      });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({
+      message: "Error verifying association creator",
+      error: error.message,
+    });
+  }
+};
+
 const isPropietario = async (req, res, next) => {
   const usuarioId = req.user && req.user.id;
   const asociacionId =
@@ -184,6 +217,7 @@ module.exports = {
   authMiddleware,
   isAdmin,
   isAssociationMember,
+  isAssociationCreator,
   isAsociacionAdmin,
   isPropietario,
   isFiscal,

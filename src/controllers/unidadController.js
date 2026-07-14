@@ -113,6 +113,62 @@ const update = async (req, res) => {
   }
 };
 
+const updateMyUnit = async (req, res) => {
+  const { unidad_id, asociacion_id } = req.params;
+  const {
+    placa,
+    marca,
+    modelo,
+    ano,
+    numero_unidad,
+    numero_puestos,
+    color,
+    capacidad,
+    serial_carroceria,
+    serial_motor,
+    numero_cilindros,
+    peso,
+    numero_poliza_rcv,
+    numero_placa_asignada,
+    fecha_emision,
+    chofer,
+  } = req.body;
+
+  try {
+    const unidad = await unidadModel.updateMyUnidad(
+      unidad_id,
+      asociacion_id,
+      req.user.id,
+      placa,
+      marca,
+      modelo,
+      ano,
+      numero_unidad,
+      numero_puestos,
+      color,
+      capacidad,
+      serial_carroceria,
+      serial_motor,
+      numero_cilindros,
+      peso,
+      numero_poliza_rcv,
+      numero_placa_asignada,
+      fecha_emision,
+      chofer,
+    );
+
+    if (!unidad) {
+      return res.status(404).json({ message: "Unidad not found" });
+    }
+
+    res.json(unidad);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating own unidad", error: error.message });
+  }
+};
+
 const changeState = async (req, res) => {
   const { unidad_id } = req.params;
   const { estado, motivo } = req.body;
@@ -157,6 +213,7 @@ const remove = async (req, res) => {
 module.exports = {
   create,
   update,
+  updateMyUnit,
   changeState,
   remove,
 };

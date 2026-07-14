@@ -137,6 +137,25 @@ const updateMember = async (req, res) => {
   }
 };
 
+const updateOwnMember = async (req, res) => {
+  try {
+    const row = await asociacionModel.updateOwnerSelfMember(
+      req.params.asociacion_id,
+      req.params.membresia_id,
+      req.user.id,
+      req.body,
+    );
+    if (!row) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.json(row);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating own member", error: error.message });
+  }
+};
+
 const deleteMember = async (req, res) => {
   try {
     const row = await asociacionModel.deleteAssociationMember(
@@ -259,6 +278,7 @@ module.exports = {
   getMemberDetail,
   createMember,
   updateMember,
+  updateOwnMember,
   deleteMember,
   listUnits,
   listTraceability,
