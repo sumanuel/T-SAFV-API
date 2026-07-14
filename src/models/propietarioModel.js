@@ -16,17 +16,22 @@ const findMyUnidades = async (propietario_id, asociacion_id) => {
 };
 
 const findTrazabilidadByUnidad = async (unidad_id, fecha_inicio, fecha_fin) => {
-  let query = "SELECT * FROM registros_fiscalizacion WHERE unidad_id = $1";
+  let query = `
+    SELECT rf.*, uf.nombre AS fiscal_nombre, uf.apellido AS fiscal_apellido, ff.punto_control
+    FROM registros_fiscalizacion rf
+    LEFT JOIN usuarios uf ON uf.id = rf.fiscal_id
+    LEFT JOIN fiscales ff ON ff.asociacion_id = rf.asociacion_id AND ff.usuario_id = rf.fiscal_id
+    WHERE rf.unidad_id = $1`;
   const params = [unidad_id];
   if (fecha_inicio) {
     params.push(fecha_inicio);
-    query += ` AND fecha_hora_registro >= $${params.length}`;
+    query += ` AND rf.fecha_hora_registro >= $${params.length}`;
   }
   if (fecha_fin) {
     params.push(fecha_fin);
-    query += ` AND fecha_hora_registro <= $${params.length}`;
+    query += ` AND rf.fecha_hora_registro < ($${params.length}::date + INTERVAL '1 day')`;
   }
-  query += " ORDER BY fecha_hora_registro DESC";
+  query += " ORDER BY rf.fecha_hora_registro DESC";
   const res = await pool.query(query, params);
   return res.rows;
 };
@@ -71,11 +76,14 @@ const findMyTrazabilidadAllAssociations = async (
     SELECT rf.*,
            ut.placa, ut.numero_unidad,
            a.nombre AS asociacion_nombre,
-           uf.nombre AS fiscal_nombre
+          uf.nombre AS fiscal_nombre,
+          uf.apellido AS fiscal_apellido,
+          ff.punto_control
     FROM registros_fiscalizacion rf
     JOIN unidades_transporte ut ON ut.id = rf.unidad_id
     JOIN asociaciones a ON a.id = rf.asociacion_id
     LEFT JOIN usuarios uf ON uf.id = rf.fiscal_id
+        LEFT JOIN fiscales ff ON ff.asociacion_id = rf.asociacion_id AND ff.usuario_id = rf.fiscal_id
     JOIN membresias m ON m.usuario_id = $1 AND m.asociacion_id = rf.asociacion_id
     LEFT JOIN LATERAL (
       SELECT estado FROM historial_estados
@@ -93,7 +101,7 @@ const findMyTrazabilidadAllAssociations = async (
   }
   if (fecha_fin) {
     params.push(fecha_fin);
-    query += ` AND rf.fecha_hora_registro <= $${params.length}`;
+    query += ` AND rf.fecha_hora_registro < ($${params.length}::date + INTERVAL '1 day')`;
   }
   if (buscar) {
     params.push(`%${buscar}%`);
