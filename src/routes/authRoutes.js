@@ -49,4 +49,42 @@ router.patch(
   authController.updatePushToken,
 );
 
+// Rutas de recuperación de contraseña
+const {
+  forgotPassword,
+} = require("../controllers/auth/forgotPasswordController");
+const {
+  verifyResetCode,
+} = require("../controllers/auth/verifyResetCodeController");
+const {
+  resetPassword,
+} = require("../controllers/auth/resetPasswordController");
+
+router.post(
+  "/forgot-password",
+  body("email").isEmail().withMessage("Invalid email"),
+  validate,
+  forgotPassword,
+);
+
+router.post(
+  "/verify-reset-code",
+  body("email").isEmail().withMessage("Invalid email"),
+  body("code")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("Código debe tener 6 dígitos"),
+  validate,
+  verifyResetCode,
+);
+
+router.post(
+  "/reset-password",
+  body("resetToken").notEmpty().withMessage("resetToken requerido"),
+  body("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("La contraseña debe tener al menos 8 caracteres"),
+  validate,
+  resetPassword,
+);
+
 module.exports = router;

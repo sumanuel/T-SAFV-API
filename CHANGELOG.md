@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added (2026-07-30) - FEATURE-001: Password Recovery System
+
+- **POST /api/auth/forgot-password**: Endpoint to request 6-digit recovery code via email
+- **POST /api/auth/verify-reset-code**: Endpoint to verify code and receive JWT resetToken
+- **POST /api/auth/reset-password**: Endpoint to update password with resetToken
+- **Database migration**: New `password_reset_codes` table with fields: user_id, code, reset_token, attempts, is_verified, created_at, expires_at, used_at
+- **Email service**: Nodemailer integration for sending recovery codes
+- **Email template**: Responsive HTML template with T-SAFV branding
+- **Security features**:
+  - 6-digit codes expire in 15 minutes
+  - 1-minute cooldown between code requests
+  - Maximum 5 verification attempts per code
+  - JWT resetToken valid for 15 minutes
+  - Bcrypt hashing for password updates (10 rounds)
+  - Automatic invalidation of used codes
+  - Cascade delete on user removal
+- **Controllers**: `forgotPasswordController`, `verifyResetCodeController`, `resetPasswordController`
+- **Validators**: Express-validator integration in auth routes for email and code validation
+
+### Documentation
+
+- **FEATURE-001-recuperar-password-movil.md**: Complete technical specification
+- **PLAN-001-recuperar-password-movil.md**: 6-phase implementation plan
+- **IMPLEMENTACION-FEATURE-001.md**: Configuration and deployment guide
+
 ## [1.0.1] - 2026-06-29
 
 ### Fixed
