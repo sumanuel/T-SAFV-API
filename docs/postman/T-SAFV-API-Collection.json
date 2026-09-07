@@ -1,0 +1,766 @@
+{
+  "info": {
+    "_postman_id": "t-safv-api-collection-v1",
+    "name": "T-SAFV API - Auto Guardian",
+    "description": "Coleccion de endpoints para T-SAFV API - Sistema de Traceabilidad, Administracion, Fiscalizacion y Vehiculos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Autenticacion",
+      "item": [
+        {
+          "name": "Registro de Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Juan\",\"apellido\":\"Perez\",\"email\":\"juan.perez@example.com\",\"password\":\"SecurePass123\",\"telefono\":\"+58-412-1234567\",\"rif_cedula\":\"V-12345678\",\"direccion\":\"Calle Principal 123\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/register",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Iniciar Sesion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"juan.perez@example.com\",\"password\":\"SecurePass123\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/login",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Solicitar Recuperacion de Contrasena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"juan.perez@example.com\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/forgot-password",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Verificar Codigo de Recuperacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"juan.perez@example.com\",\"code\":\"123456\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/verify-reset-code",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-reset-code"]
+            }
+          }
+        },
+        {
+          "name": "Resetear Contrasena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"resetToken\":\"token_aqui\",\"newPassword\":\"NuevaPassword123\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/reset-password",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Verificar Acceso a Crear Asociacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/association-access",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "association-access"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Push Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"push_token\":\"ExponentPushToken[ABC123DEF456]\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/auth/push-token",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "push-token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asociaciones",
+      "item": [
+        {
+          "name": "Listar Mis Asociaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/mine",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "mine"]
+            }
+          }
+        },
+        {
+          "name": "Listar Todas Mis Asociaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/mine-all",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "mine-all"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nueva Asociacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Asociacion de Transportistas\",\"rif\":\"J-12345678-9\",\"direccion_fiscal\":\"Calle Principal 456\",\"email\":\"contacto@transportistas.com\",\"telefonos\":\"+58-212-1234567\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Asociacion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Asociacion Actualizada\",\"email\":\"nuevo@transportistas.com\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar Miembros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Detalle de Miembro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros/{{membresia_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros", "{{membresia_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Miembro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Carlos\",\"email\":\"carlos@example.com\",\"rol\":\"FISCAL\",\"punto_control\":\"Terminal Central\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Miembro",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Carlos Manuel\",\"punto_control\":\"Terminal Norte\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros/{{membresia_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros", "{{membresia_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Membresias",
+      "item": [
+        {
+          "name": "Cambiar Estado de Membresia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"ACTIVO\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/membresias/{{membresia_id}}/state",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "membresias", "{{membresia_id}}", "state"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invitaciones",
+      "item": [
+        {
+          "name": "Crear Invitacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"asociacion_id\":1,\"email_invitado\":\"nuevo.fiscal@example.com\",\"rol_invitado\":\"FISCAL\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/invitaciones",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invitaciones"]
+            }
+          }
+        },
+        {
+          "name": "Listar Mis Invitaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/invitaciones/mine",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invitaciones", "mine"]
+            }
+          }
+        },
+        {
+          "name": "Listar Invitaciones de Asociacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/invitaciones/asociaciones/{{asociacion_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invitaciones", "asociaciones", "{{asociacion_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cancelar Invitacion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/invitaciones/asociaciones/{{asociacion_id}}/{{invitacion_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invitaciones", "asociaciones", "{{asociacion_id}}", "{{invitacion_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Responder Aceptar Invitacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"invitacion_id\":1,\"aceptar\":true}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/invitaciones/respond",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invitaciones", "respond"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unidades",
+      "item": [
+        {
+          "name": "Crear Unidad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"asociacion_id\":1,\"propietario_id\":5,\"placa\":\"ABC-123\",\"numero_unidad\":\"UN-001\",\"numero_puestos\":50,\"marca\":\"Mercedes-Benz\",\"modelo\":\"Sprinter\",\"ano\":2022,\"color\":\"Blanco\",\"chofer\":\"Pedro Gonzalez\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/unidades",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "unidades"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Unidad",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"propietario_id\":5,\"placa\":\"ABC-123\",\"numero_unidad\":\"UN-001\",\"numero_puestos\":52,\"chofer\":\"Pedro Gonzalez\"}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/unidades/{{unidad_id}}",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asociaciones", "{{asociacion_id}}", "unidades", "{{unidad_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Propietario",
+      "item": [
+        {
+          "name": "Obtener Mis Unidades de Asociacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/propietario/asociaciones/{{asociacion_id}}/unidades",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propietario", "asociaciones", "{{asociacion_id}}", "unidades"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Trazabilidad de Unidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/propietario/unidades/{{unidad_id}}/trazabilidad",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propietario", "unidades", "{{unidad_id}}", "trazabilidad"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Todas Mis Unidades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/propietario/mis-unidades",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propietario", "mis-unidades"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Toda Mi Trazabilidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/propietario/mi-trazabilidad",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propietario", "mi-trazabilidad"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fiscal",
+      "item": [
+        {
+          "name": "Obtener Unidades Activas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/fiscal/asociaciones/{{asociacion_id}}/unidades",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fiscal", "asociaciones", "{{asociacion_id}}", "unidades"]
+            }
+          }
+        },
+        {
+          "name": "Crear Registro de Fiscalizacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidad_id\":1,\"asociacion_id\":1,\"chofer\":\"Pedro Gonzalez\",\"origen\":\"Terminal Central\",\"destino\":\"Ciudad de Oro\",\"pasajeros\":45}"
+            },
+            "url": {
+              "raw": "https://{{base_url}}/api/fiscal/registros",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fiscal", "registros"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exportacion",
+      "item": [
+        {
+          "name": "Exportar Miembros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/miembros",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "miembros"]
+            }
+          }
+        },
+        {
+          "name": "Exportar Unidades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/unidades",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "unidades"]
+            }
+          }
+        },
+        {
+          "name": "Exportar Trazabilidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/trazabilidad",
+              "protocol": "https",
+              "host": ["{{base_url}}"],
+              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "trazabilidad"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "api-autoguardian.system-meek.com",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "asociacion_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "membresia_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "unidad_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "invitacion_id",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

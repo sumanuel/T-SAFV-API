@@ -1,0 +1,57 @@
+{
+  "id": "t-safv-api-env",
+  "name": "T-SAFV API - Production",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "api-autoguardian.system-meek.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "asociacion_id",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "unidad_id",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "membresia_id",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "invitacion_id",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "usuario_email",
+      "value": "usuario@example.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "usuario_password",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-09-07T00:00:00.000Z",
+  "_postman_exported_using": "Postman/10.0.0"
+}
