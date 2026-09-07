@@ -288,7 +288,13 @@
               "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros/{{membresia_id}}",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros", "{{membresia_id}}"]
+              "path": [
+                "api",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "miembros",
+                "{{membresia_id}}"
+              ]
             }
           }
         },
@@ -340,7 +346,13 @@
               "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/miembros/{{membresia_id}}",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "asociaciones", "{{asociacion_id}}", "miembros", "{{membresia_id}}"]
+              "path": [
+                "api",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "miembros",
+                "{{membresia_id}}"
+              ]
             }
           }
         }
@@ -371,7 +383,14 @@
               "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/membresias/{{membresia_id}}/state",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "asociaciones", "{{asociacion_id}}", "membresias", "{{membresia_id}}", "state"]
+              "path": [
+                "api",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "membresias",
+                "{{membresia_id}}",
+                "state"
+              ]
             }
           }
         }
@@ -438,7 +457,12 @@
               "raw": "https://{{base_url}}/api/invitaciones/asociaciones/{{asociacion_id}}",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "invitaciones", "asociaciones", "{{asociacion_id}}"]
+              "path": [
+                "api",
+                "invitaciones",
+                "asociaciones",
+                "{{asociacion_id}}"
+              ]
             }
           }
         },
@@ -456,7 +480,13 @@
               "raw": "https://{{base_url}}/api/invitaciones/asociaciones/{{asociacion_id}}/{{invitacion_id}}",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "invitaciones", "asociaciones", "{{asociacion_id}}", "{{invitacion_id}}"]
+              "path": [
+                "api",
+                "invitaciones",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "{{invitacion_id}}"
+              ]
             }
           }
         },
@@ -539,7 +569,13 @@
               "raw": "https://{{base_url}}/api/asociaciones/{{asociacion_id}}/unidades/{{unidad_id}}",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "asociaciones", "{{asociacion_id}}", "unidades", "{{unidad_id}}"]
+              "path": [
+                "api",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "unidades",
+                "{{unidad_id}}"
+              ]
             }
           }
         }
@@ -562,7 +598,13 @@
               "raw": "https://{{base_url}}/api/propietario/asociaciones/{{asociacion_id}}/unidades",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "propietario", "asociaciones", "{{asociacion_id}}", "unidades"]
+              "path": [
+                "api",
+                "propietario",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "unidades"
+              ]
             }
           }
         },
@@ -580,7 +622,13 @@
               "raw": "https://{{base_url}}/api/propietario/unidades/{{unidad_id}}/trazabilidad",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "propietario", "unidades", "{{unidad_id}}", "trazabilidad"]
+              "path": [
+                "api",
+                "propietario",
+                "unidades",
+                "{{unidad_id}}",
+                "trazabilidad"
+              ]
             }
           }
         },
@@ -639,7 +687,13 @@
               "raw": "https://{{base_url}}/api/fiscal/asociaciones/{{asociacion_id}}/unidades",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "fiscal", "asociaciones", "{{asociacion_id}}", "unidades"]
+              "path": [
+                "api",
+                "fiscal",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "unidades"
+              ]
             }
           }
         },
@@ -688,7 +742,13 @@
               "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/miembros",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "miembros"]
+              "path": [
+                "api",
+                "export",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "miembros"
+              ]
             }
           }
         },
@@ -706,7 +766,13 @@
               "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/unidades",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "unidades"]
+              "path": [
+                "api",
+                "export",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "unidades"
+              ]
             }
           }
         },
@@ -724,7 +790,13 @@
               "raw": "https://{{base_url}}/api/export/asociaciones/{{asociacion_id}}/trazabilidad",
               "protocol": "https",
               "host": ["{{base_url}}"],
-              "path": ["api", "export", "asociaciones", "{{asociacion_id}}", "trazabilidad"]
+              "path": [
+                "api",
+                "export",
+                "asociaciones",
+                "{{asociacion_id}}",
+                "trazabilidad"
+              ]
             }
           }
         }
