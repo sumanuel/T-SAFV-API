@@ -1,0 +1,5 @@
+ALTER TABLE usuarios
+  ADD COLUMN IF NOT EXISTS is_provisional BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE asociacion_pagos
+  ADD COLUMN IF NOT EXISTS notificado_en TIMESTAMP;

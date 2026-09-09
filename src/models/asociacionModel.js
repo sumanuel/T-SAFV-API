@@ -615,8 +615,8 @@ const createAssociationMember = async (asociacionId, payload, adminId) => {
         password || crypto.randomBytes(12).toString("hex");
       const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
       const userRes = await client.query(
-        `INSERT INTO usuarios (nombre, apellido, email, password, telefono, rif_cedula, direccion)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO usuarios (nombre, apellido, email, password, telefono, rif_cedula, direccion, is_provisional)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
          RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion`,
         [
           nombre,

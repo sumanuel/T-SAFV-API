@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 const bcrypt = require("bcryptjs");
+const { sendPushNotification } = require("../services/notificationService");
 
 const createUser = async ({
   nombre,
@@ -73,6 +74,39 @@ const findReservedProfilesByEmail = async (email, db = pool) => {
   return res.rows;
 };
 
+// Avisa al usuario (push) la primera vez que se detecta su trial/pago activo,
+// sin importar si fue aprobado por un endpoint o directamente por BD.
+const notifyEntitlementActivated = async (userId, entitlement, db = pool) => {
+  try {
+    await db.query(
+      `UPDATE asociacion_pagos SET notificado_en = NOW() WHERE id = $1`,
+      [entitlement.id],
+    );
+
+    const userRes = await db.query(
+      "SELECT push_token FROM usuarios WHERE id = $1 LIMIT 1",
+      [userId],
+    );
+    const pushToken = userRes.rows[0]?.push_token;
+    if (pushToken) {
+      const title = entitlement.es_trial
+        ? "Período de prueba activo"
+        : "Pago confirmado";
+      const body = entitlement.es_trial
+        ? "Tu período de prueba ya está activo. Ya puedes crear tu asociación y comenzar a usar la app."
+        : "Tu pago fue confirmado. Ya puedes crear tu asociación y comenzar a usar la app.";
+      await sendPushNotification(pushToken, title, body, {
+        entitlement_id: entitlement.id,
+      });
+    }
+  } catch (notifErr) {
+    console.error(
+      "Error enviando notificación de activación de trial/pago:",
+      notifErr.message,
+    );
+  }
+};
+
 const getAssociationCreationAccess = async ({ userId, email }, db = pool) => {
   const reservations = email
     ? await findReservedProfilesByEmail(email, db)
@@ -141,6 +175,11 @@ const getAssociationCreationAccess = async ({ userId, email }, db = pool) => {
   );
 
   if (hasValidPayment) {
+    if (!entitlement.notificado_en) {
+      await notifyEntitlementActivated(userId, entitlement, db);
+      entitlement.notificado_en = new Date();
+    }
+
     return {
       allowed: true,
       can_start_trial: false,
@@ -205,6 +244,11 @@ const claimReservedUser = async (
   const user = userRes.rows[0];
   if (!user) return null;
 
+  // La cuenta ya fue reclamada antes (tiene contraseña propia definida por su dueño).
+  // No permitir que un segundo registro con el mismo email la vuelva a reclamar y
+  // sobrescriba su contraseña/rol sin verificar la identidad del solicitante.
+  if (!user.is_provisional) return null;
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const reservedRole = reservations[0].rol_reservado;
   const updatedRes = await db.query(
@@ -215,7 +259,8 @@ const claimReservedUser = async (
          telefono = $4,
          rif_cedula = $5,
          direccion = $6,
-         rol = $7
+         rol = $7,
+         is_provisional = FALSE
      WHERE id = $8
      RETURNING id, nombre, apellido, email, telefono, rif_cedula, direccion, rol`,
     [
