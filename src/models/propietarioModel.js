@@ -17,8 +17,10 @@ const findMyUnidades = async (propietario_id, asociacion_id) => {
 
 const findTrazabilidadByUnidad = async (unidad_id, fecha_inicio, fecha_fin) => {
   let query = `
-    SELECT rf.*, uf.nombre AS fiscal_nombre, uf.apellido AS fiscal_apellido, ff.punto_control
+    SELECT rf.*, ut.placa, ut.numero_unidad,
+           uf.nombre AS fiscal_nombre, uf.apellido AS fiscal_apellido, ff.punto_control
     FROM registros_fiscalizacion rf
+    JOIN unidades_transporte ut ON ut.id = rf.unidad_id
     LEFT JOIN usuarios uf ON uf.id = rf.fiscal_id
     LEFT JOIN fiscales ff ON ff.asociacion_id = rf.asociacion_id AND ff.usuario_id = rf.fiscal_id
     WHERE rf.unidad_id = $1`;
