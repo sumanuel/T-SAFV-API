@@ -23,3 +23,6 @@ coverage/
 # Excel exports
 *.xlsx
 
+# Archivos comprimidos
+*.zip
+
