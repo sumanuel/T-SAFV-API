@@ -1,6 +1,6 @@
 const pool = require("../config/database");
 const bcrypt = require("bcryptjs");
-const { sendPushNotification } = require("../services/notificationService");
+const { notifyUser } = require("../services/notificationService");
 
 const createUser = async ({
   nombre,
@@ -83,22 +83,18 @@ const notifyEntitlementActivated = async (userId, entitlement, db = pool) => {
       [entitlement.id],
     );
 
-    const userRes = await db.query(
-      "SELECT push_token FROM usuarios WHERE id = $1 LIMIT 1",
-      [userId],
-    );
-    const pushToken = userRes.rows[0]?.push_token;
-    if (pushToken) {
-      const title = entitlement.es_trial
-        ? "Período de prueba activo"
-        : "Pago confirmado";
-      const body = entitlement.es_trial
-        ? "Tu período de prueba ya está activo. Ya puedes crear tu asociación y comenzar a usar la app."
-        : "Tu pago fue confirmado. Ya puedes crear tu asociación y comenzar a usar la app.";
-      await sendPushNotification(pushToken, title, body, {
-        entitlement_id: entitlement.id,
-      });
-    }
+    const title = entitlement.es_trial
+      ? "Período de prueba activo"
+      : "Pago confirmado";
+    const body = entitlement.es_trial
+      ? "Tu período de prueba ya está activo. Ya puedes crear tu asociación y comenzar a usar la app."
+      : "Tu pago fue confirmado. Ya puedes crear tu asociación y comenzar a usar la app.";
+    await notifyUser(userId, {
+      tipo: entitlement.es_trial ? "trial_activo" : "pago_confirmado",
+      title,
+      body,
+      data: { entitlement_id: entitlement.id },
+    });
   } catch (notifErr) {
     console.error(
       "Error enviando notificación de activación de trial/pago:",

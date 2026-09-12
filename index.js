@@ -9,6 +9,7 @@ const propietarioRoutes = require("./src/routes/propietarioRoutes");
 const fiscalRoutes = require("./src/routes/fiscalRoutes");
 const exportRoutes = require("./src/routes/exportRoutes");
 const membresiaRoutes = require("./src/routes/membresiaRoutes");
+const notificacionRoutes = require("./src/routes/notificacionRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/propietario", propietarioRoutes);
 app.use("/api/fiscal", fiscalRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api", membresiaRoutes);
+app.use("/api/notificaciones", notificacionRoutes);
 
 const errorHandler = require("./src/middlewares/errorHandler");
 

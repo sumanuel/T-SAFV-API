@@ -1,5 +1,5 @@
 const pool = require("../config/database");
-const { sendPushNotification } = require("../services/notificationService");
+const { notifyUser } = require("../services/notificationService");
 
 const findActiveUnidadesByAsociacion = async (asociacion_id) => {
   const res = await pool.query(
@@ -56,22 +56,21 @@ const createRegistroFiscalizacion = async (
   // Notificar al propietario de la unidad
   try {
     const ownerRes = await pool.query(
-      `SELECT u.push_token, u.nombre, ut.placa, ut.numero_unidad
+      `SELECT ut.propietario_id, ut.placa, ut.numero_unidad
        FROM unidades_transporte ut
-       JOIN usuarios u ON u.id = ut.propietario_id
        WHERE ut.id = $1 LIMIT 1`,
       [unidad_id],
     );
     const owner = ownerRes.rows[0];
-    if (owner?.push_token) {
+    if (owner?.propietario_id) {
       const unitLabel =
         owner.numero_unidad || owner.placa || `Unidad #${unidad_id}`;
-      await sendPushNotification(
-        owner.push_token,
-        "Unidad fiscalizada",
-        `Tu unidad ${unitLabel} fue registrada. Destino: ${destino || "no indicado"}.`,
-        { registro_id: registro.id, unidad_id, asociacion_id },
-      );
+      await notifyUser(owner.propietario_id, {
+        tipo: "fiscalizacion",
+        title: "Unidad fiscalizada",
+        body: `Tu unidad ${unitLabel} fue registrada. Destino: ${destino || "no indicado"}.`,
+        data: { registro_id: registro.id, unidad_id, asociacion_id },
+      });
     }
   } catch (notifErr) {
     console.error(

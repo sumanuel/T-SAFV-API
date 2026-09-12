@@ -1,4 +1,6 @@
 const { Expo } = require("expo-server-sdk");
+const pool = require("../config/database");
+const notificacionModel = require("../models/notificacionModel");
 
 const expo = new Expo();
 
@@ -34,4 +36,36 @@ async function sendPushNotification(pushToken, title, body, data = {}) {
   }
 }
 
-module.exports = { sendPushNotification };
+/**
+ * Notifica a un usuario: guarda la notificación (para la campana de la app)
+ * y, si el usuario tiene push_token registrado, también le envía la push.
+ * @param {number} usuarioId
+ * @param {{tipo?: string, title: string, body: string, data?: object}} notification
+ */
+async function notifyUser(usuarioId, { tipo = "general", title, body, data = {} }) {
+  try {
+    await notificacionModel.createNotification(usuarioId, {
+      tipo,
+      titulo: title,
+      cuerpo: body,
+      data,
+    });
+  } catch (error) {
+    console.error("Error guardando notificación:", error.message);
+  }
+
+  try {
+    const userRes = await pool.query(
+      "SELECT push_token FROM usuarios WHERE id = $1 LIMIT 1",
+      [usuarioId],
+    );
+    const pushToken = userRes.rows[0]?.push_token;
+    if (pushToken) {
+      await sendPushNotification(pushToken, title, body, data);
+    }
+  } catch (error) {
+    console.error("Error enviando push notification:", error.message);
+  }
+}
+
+module.exports = { sendPushNotification, notifyUser };
