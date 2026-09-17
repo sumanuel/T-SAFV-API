@@ -49,10 +49,26 @@ const markAllAsRead = async (usuarioId) => {
   );
 };
 
+const deleteOne = async (usuarioId, notificacionId) => {
+  const res = await pool.query(
+    `DELETE FROM notificaciones WHERE id = $1 AND usuario_id = $2 RETURNING id`,
+    [notificacionId, usuarioId],
+  );
+  return res.rowCount > 0;
+};
+
+const deleteAll = async (usuarioId) => {
+  await pool.query(`DELETE FROM notificaciones WHERE usuario_id = $1`, [
+    usuarioId,
+  ]);
+};
+
 module.exports = {
   createNotification,
   listByUser,
   countUnread,
   markAsRead,
   markAllAsRead,
+  deleteOne,
+  deleteAll,
 };

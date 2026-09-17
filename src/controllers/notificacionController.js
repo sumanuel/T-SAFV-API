@@ -50,4 +50,37 @@ const markAllRead = async (req, res) => {
   }
 };
 
-module.exports = { getMine, markRead, markAllRead };
+const deleteOne = async (req, res) => {
+  const usuarioId = req.user.id;
+  const { notificacion_id } = req.params;
+  try {
+    const deleted = await notificacionModel.deleteOne(
+      usuarioId,
+      notificacion_id,
+    );
+    if (!deleted) {
+      return res.status(404).json({ message: "Notificación no encontrada" });
+    }
+    res.json({ message: "Notificación eliminada" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error eliminando notificación",
+      error: error.message,
+    });
+  }
+};
+
+const deleteAll = async (req, res) => {
+  const usuarioId = req.user.id;
+  try {
+    await notificacionModel.deleteAll(usuarioId);
+    res.json({ message: "Notificaciones eliminadas" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error eliminando notificaciones",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { getMine, markRead, markAllRead, deleteOne, deleteAll };

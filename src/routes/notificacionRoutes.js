@@ -23,4 +23,14 @@ router.patch(
 
 router.patch("/leidas", authMiddleware, notificacionController.markAllRead);
 
+router.delete("/all", authMiddleware, notificacionController.deleteAll);
+
+router.delete(
+  "/:notificacion_id",
+  authMiddleware,
+  param("notificacion_id").isInt().withMessage("notificacion_id must be integer"),
+  validate,
+  notificacionController.deleteOne,
+);
+
 module.exports = router;

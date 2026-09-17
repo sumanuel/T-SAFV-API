@@ -65,11 +65,19 @@ const createRegistroFiscalizacion = async (
     if (owner?.propietario_id) {
       const unitLabel =
         owner.numero_unidad || owner.placa || `Unidad #${unidad_id}`;
+      const puntoControlText = punto_control
+        ? ` Punto de control: ${punto_control}.`
+        : "";
       await notifyUser(owner.propietario_id, {
         tipo: "fiscalizacion",
         title: "Unidad fiscalizada",
-        body: `Tu unidad ${unitLabel} fue registrada. Destino: ${destino || "no indicado"}.`,
-        data: { registro_id: registro.id, unidad_id, asociacion_id },
+        body: `Tu unidad ${unitLabel} fue registrada. Destino: ${destino || "no indicado"}.${puntoControlText}`,
+        data: {
+          registro_id: registro.id,
+          unidad_id,
+          asociacion_id,
+          punto_control,
+        },
       });
     }
   } catch (notifErr) {
