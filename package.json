@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand __tests__",
+    "test:integration": "jest --runInBand tests",
     "migrate": "node scripts/run_migrations.js"
   },
   "keywords": [],
