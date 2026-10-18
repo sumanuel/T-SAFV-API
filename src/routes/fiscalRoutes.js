@@ -27,6 +27,14 @@ router.post(
   body("origen").optional().isString(),
   body("destino").optional().isString(),
   body("pasajeros").optional().isInt(),
+  body("client_request_id")
+    .optional()
+    .isUUID()
+    .withMessage("client_request_id debe ser un UUID"),
+  body("fecha_hora_registro")
+    .optional()
+    .isISO8601()
+    .withMessage("fecha_hora_registro debe ser ISO 8601"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())

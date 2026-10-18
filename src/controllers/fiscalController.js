@@ -1,4 +1,5 @@
 const fiscalModel = require("../models/fiscalModel");
+const { resolveCaptureTime } = require("../utils/captureTime");
 
 const getUnidadesActivas = async (req, res) => {
   const asociacion_id = req.params.asociacion_id;
@@ -14,22 +15,33 @@ const getUnidadesActivas = async (req, res) => {
 };
 
 const createRegistro = async (req, res) => {
-  const { unidad_id, asociacion_id, chofer, origen, destino, pasajeros } =
-    req.body;
+  const {
+    unidad_id,
+    asociacion_id,
+    chofer,
+    origen,
+    destino,
+    pasajeros,
+    client_request_id,
+    fecha_hora_registro: capturedAt,
+  } = req.body;
   const fiscal_id = req.user.id;
-  const fecha_hora_registro = new Date();
+  const fecha_hora_registro = resolveCaptureTime(capturedAt);
   try {
-    const registro = await fiscalModel.createRegistroFiscalizacion(
-      unidad_id,
-      fiscal_id,
-      asociacion_id,
-      chofer,
-      origen,
-      destino,
-      pasajeros,
-      fecha_hora_registro,
-    );
-    res.status(201).json(registro);
+    const { registro, duplicate } =
+      await fiscalModel.createRegistroFiscalizacion(
+        unidad_id,
+        fiscal_id,
+        asociacion_id,
+        chofer,
+        origen,
+        destino,
+        pasajeros,
+        fecha_hora_registro,
+        { clientRequestId: client_request_id },
+      );
+    // 200 en un reintento (ya existia), 201 cuando se crea.
+    res.status(duplicate ? 200 : 201).json(registro);
   } catch (error) {
     res
       .status(500)

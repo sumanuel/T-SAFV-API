@@ -26,6 +26,7 @@ const createRegistroFiscalizacion = async (
   destino,
   pasajeros,
   fecha_hora_registro,
+  { clientRequestId } = {},
 ) => {
   const fiscalProfileRes = await pool.query(
     `SELECT punto_control
@@ -36,22 +37,59 @@ const createRegistroFiscalizacion = async (
   );
   const punto_control = fiscalProfileRes.rows[0]?.punto_control || null;
 
-  const res = await pool.query(
-    `INSERT INTO registros_fiscalizacion (unidad_id, fiscal_id, asociacion_id, chofer, origen, destino, pasajeros, fecha_hora_registro, punto_control)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    [
-      unidad_id,
-      fiscal_id,
-      asociacion_id,
-      chofer,
-      origen,
-      destino,
-      pasajeros,
-      fecha_hora_registro,
-      punto_control,
-    ],
-  );
-  const registro = res.rows[0];
+  const values = [
+    unidad_id,
+    fiscal_id,
+    asociacion_id,
+    chofer,
+    origen,
+    destino,
+    pasajeros,
+    fecha_hora_registro,
+    punto_control,
+  ];
+  const columns =
+    "unidad_id, fiscal_id, asociacion_id, chofer, origen, destino, pasajeros, fecha_hora_registro, punto_control";
+
+  let registro = null;
+
+  if (clientRequestId) {
+    try {
+      const inserted = await pool.query(
+        `INSERT INTO registros_fiscalizacion (${columns}, client_request_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (fiscal_id, client_request_id) WHERE client_request_id IS NOT NULL
+         DO NOTHING RETURNING *`,
+        [...values, clientRequestId],
+      );
+      registro = inserted.rows[0] || null;
+
+      if (!registro) {
+        // Reintento de un registro ya guardado: se devuelve el original y no
+        // se vuelve a notificar al propietario.
+        const existing = await pool.query(
+          `SELECT * FROM registros_fiscalizacion
+           WHERE fiscal_id = $1 AND client_request_id = $2`,
+          [fiscal_id, clientRequestId],
+        );
+        return { registro: existing.rows[0], duplicate: true };
+      }
+    } catch (error) {
+      // 42703 columna inexistente / 42P10 sin indice unico: la migracion 0010
+      // aun no se aplico; se guarda sin idempotencia en vez de fallar.
+      if (error.code !== "42703" && error.code !== "42P10") throw error;
+      registro = null;
+    }
+  }
+
+  if (!registro) {
+    const res = await pool.query(
+      `INSERT INTO registros_fiscalizacion (${columns})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      values,
+    );
+    registro = res.rows[0];
+  }
 
   // Notificar al propietario de la unidad
   try {
@@ -87,7 +125,7 @@ const createRegistroFiscalizacion = async (
     );
   }
 
-  return registro;
+  return { registro, duplicate: false };
 };
 
 module.exports = {
