@@ -34,6 +34,20 @@ router.post(
   authController.login,
 );
 
+router.post(
+  "/refresh",
+  body("refresh_token").isString().notEmpty().withMessage("refresh_token requerido"),
+  validate,
+  authController.refresh,
+);
+
+router.post(
+  "/logout",
+  body("refresh_token").isString().notEmpty().withMessage("refresh_token requerido"),
+  validate,
+  authController.logout,
+);
+
 router.get(
   "/association-access",
   authMiddleware,

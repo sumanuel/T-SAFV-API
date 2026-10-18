@@ -1,6 +1,6 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const tokenService = require("../services/tokenService");
 require("dotenv").config();
 
 const register = async (req, res) => {
@@ -78,43 +78,36 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const access = await userModel.getAssociationCreationAccess({
-      userId: user.id,
-      email: user.email,
-    });
-
-    const token = jwt.sign(
-      {
-        id: user.id,
-        rol: user.rol || "ADMIN",
-        nombre: user.nombre,
-        apellido: user.apellido,
-        email: user.email,
-        telefono: user.telefono,
-        rif_cedula: user.rif_cedula,
-        direccion: user.direccion,
-        association_creation_access: access,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        rol: user.rol || "ADMIN",
-        nombre: user.nombre,
-        apellido: user.apellido,
-        email: user.email,
-        telefono: user.telefono,
-        rif_cedula: user.rif_cedula,
-        direccion: user.direccion,
-        association_creation_access: access,
-      },
-    });
+    res.json(await tokenService.issueSession(user));
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
+  }
+};
+
+const refresh = async (req, res) => {
+  try {
+    const result = await tokenService.refreshSession(req.body.refresh_token);
+    if (!result.ok) {
+      return res
+        .status(401)
+        .json({ message: "Refresh token inválido o expirado", reason: result.reason });
+    }
+    res.json(result.session);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error refreshing session", error: error.message });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    await tokenService.revokeSession(req.body.refresh_token);
+    res.json({ message: "Sesión cerrada" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error closing session", error: error.message });
   }
 };
 
@@ -157,6 +150,8 @@ const updatePushToken = async (req, res) => {
 module.exports = {
   register,
   login,
+  refresh,
+  logout,
   getAssociationCreationAccessCurrent,
   updatePushToken,
 };
