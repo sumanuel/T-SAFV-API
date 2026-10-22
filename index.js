@@ -10,6 +10,8 @@ const fiscalRoutes = require("./src/routes/fiscalRoutes");
 const exportRoutes = require("./src/routes/exportRoutes");
 const membresiaRoutes = require("./src/routes/membresiaRoutes");
 const notificacionRoutes = require("./src/routes/notificacionRoutes");
+const incidenciaRoutes = require("./src/routes/incidenciaRoutes");
+const adjuntoRoutes = require("./src/routes/adjuntoRoutes");
 
 const app = express();
 
@@ -40,6 +42,8 @@ app.use("/api/fiscal", fiscalRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api", membresiaRoutes);
 app.use("/api/notificaciones", notificacionRoutes);
+app.use("/api/incidencias", incidenciaRoutes);
+app.use("/api/adjuntos", adjuntoRoutes);
 
 const errorHandler = require("./src/middlewares/errorHandler");
 
