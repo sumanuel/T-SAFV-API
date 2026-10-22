@@ -213,6 +213,31 @@ const isFiscal = async (req, res, next) => {
   }
 };
 
+// Fiscal o administrador de la asociacion (p. ej. para registrar incidencias).
+const isFiscalOrAdmin = async (req, res, next) => {
+  const usuarioId = req.user && req.user.id;
+  const asociacionId =
+    req.params.asociacion_id ||
+    req.body.asociacion_id ||
+    req.query.asociacion_id;
+  if (!usuarioId || !asociacionId)
+    return res.status(400).json({ message: "Missing association or user" });
+  try {
+    const ok =
+      (await verifyRoleInAssociation(usuarioId, asociacionId, "ADMIN")) ||
+      (await verifyRoleInAssociation(usuarioId, asociacionId, "FISCAL"));
+    if (!ok)
+      return res
+        .status(403)
+        .json({ message: "Forbidden: Fiscales or admins only" });
+    next();
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error verifying role", error: error.message });
+  }
+};
+
 module.exports = {
   authMiddleware,
   isAdmin,
@@ -221,4 +246,6 @@ module.exports = {
   isAsociacionAdmin,
   isPropietario,
   isFiscal,
+  isFiscalOrAdmin,
+  verifyMembershipInAssociation,
 };
