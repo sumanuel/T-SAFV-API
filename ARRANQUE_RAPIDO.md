@@ -19,8 +19,16 @@ Ultima actualizacion: 2026-06-29
 - EMAIL_USER
 - EMAIL_PASS
 - APP_URL
+- ACCESS_TOKEN_TTL (opcional, 24h por defecto)
+- REFRESH_TOKEN_TTL_DAYS (opcional, 30 por defecto)
+- ADJUNTO_MAX_BYTES (opcional, 3 MB por defecto: tamano maximo de una foto)
+- RETENCION_DIAS_FOTO_REGISTRO (opcional, vacio = no se borra nada)
+- RETENCION_MESES_FOTO_INCIDENCIA (opcional, vacio = no se borra nada)
 
 Notas:
+
+- Tests: `npm test` corre solo los unitarios (BD simulada). `npm run test:integration` escribe en la BD real del .env.
+- Fotos: `node scripts/purgar_adjuntos.js` informa que se borraria segun la retencion; `--aplicar` borra. Pensado para el cron del hosting.
 
 - La conexion principal se resuelve via DATABASE_URL.
 - PGSSL es true por defecto salvo valores false-like.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-10-22) - Fotos adjuntas e incidencias (PLAN-002, fase 1)
+
+- **Migracion 0011 `adjuntos`**: fotos en una tabla aparte (BYTEA, sha256, purgado_at). Una por fiscalizacion, hasta 3 por incidencia.
+- **Migracion 0012 `incidencias`**: infracciones u otros eventos fuera de una fiscalizacion (unidad opcional, estado ABIERTA/EN_REVISION/CERRADA, idempotente por `client_request_id`).
+- **POST /api/adjuntos/:entidad_tipo/:entidad_id**: sube la foto como cuerpo binario (`image/jpeg` o `image/png`, max 3 MB). El tipo se valida por los bytes, no por el Content-Type.
+- **GET /api/adjuntos/:id**, **GET /api/adjuntos/:entidad_tipo/:entidad_id** y **GET /api/adjuntos/resumen/registros?ids=**: lectura con los mismos permisos que la entidad (administradores y fiscales de la asociacion; el propietario solo de sus unidades).
+- **/api/incidencias**: registrar (fiscal o administrador), listar por asociacion con filtros, ver detalle y cambiar estado (solo administrador). Notifica al propietario de la unidad.
+- **scripts/purgar_adjuntos.js**: retencion de fotos apagada por defecto (ver PLAN-002 §6 en T-SAFV-App-V).
+- `sanitize` ya no recorre cuerpos binarios (Buffer).
+- Las migraciones 0011/0012 deben aplicarse (`npm run migrate`); las apps actuales no se ven afectadas.
+
 ### Added (2026-07-30) - FEATURE-001: Password Recovery System
 
 - **POST /api/auth/forgot-password**: Endpoint to request 6-digit recovery code via email
