@@ -1,15 +1,28 @@
 const pool = require("../config/database");
 
-const positiveInt = (value) => {
+// Valores provisionales del PLAN-002 §6 mientras el negocio no defina otros:
+// fotos de pasajeros 90 dias; fotos de incidencias 12 meses tras el cierre.
+const DEFAULT_DIAS_FOTO_REGISTRO = 90;
+const DEFAULT_MESES_FOTO_INCIDENCIA = 12;
+
+// Variable sin definir (o con un valor invalido) = el valor por defecto;
+// "0" = esa retencion queda desactivada (no se borra nada de ese tipo).
+const readLimit = (value, fallback) => {
+  if (value === undefined || String(value).trim() === "") return fallback;
   const n = Number(value);
-  return Number.isInteger(n) && n > 0 ? n : null;
+  if (!Number.isInteger(n) || n < 0) return fallback;
+  return n === 0 ? null : n;
 };
 
-// Variables de entorno vacias = no se borra nada (la conservacion de fotos
-// esta pendiente de definir; ver PLAN-002 §6).
 const readRetentionConfig = (env = process.env) => ({
-  diasFotoRegistro: positiveInt(env.RETENCION_DIAS_FOTO_REGISTRO),
-  mesesFotoIncidencia: positiveInt(env.RETENCION_MESES_FOTO_INCIDENCIA),
+  diasFotoRegistro: readLimit(
+    env.RETENCION_DIAS_FOTO_REGISTRO,
+    DEFAULT_DIAS_FOTO_REGISTRO,
+  ),
+  mesesFotoIncidencia: readLimit(
+    env.RETENCION_MESES_FOTO_INCIDENCIA,
+    DEFAULT_MESES_FOTO_INCIDENCIA,
+  ),
 });
 
 const SUMMARY = (rows) => ({

@@ -3,9 +3,9 @@
 //   node scripts/purgar_adjuntos.js            -> solo informa que borraria
 //   node scripts/purgar_adjuntos.js --aplicar  -> borra el contenido
 //
-// Variables de entorno (vacias = no se purga nada):
-//   RETENCION_DIAS_FOTO_REGISTRO      dias que se guarda la foto de una fiscalizacion
-//   RETENCION_MESES_FOTO_INCIDENCIA   meses tras el cierre de una incidencia
+// Variables de entorno (opcionales; 0 = no purgar ese tipo):
+//   RETENCION_DIAS_FOTO_REGISTRO      dias que se guarda la foto de una fiscalizacion (90 por defecto)
+//   RETENCION_MESES_FOTO_INCIDENCIA   meses tras el cierre de una incidencia (12 por defecto)
 require("dotenv").config();
 const pool = require("../src/config/database");
 const {
@@ -19,7 +19,7 @@ const mb = (bytes) => (bytes / (1024 * 1024)).toFixed(2);
   try {
     const config = readRetentionConfig();
     if (!config.diasFotoRegistro && !config.mesesFotoIncidencia) {
-      console.log("Retencion no configurada: no se borra nada.");
+      console.log("Retencion desactivada (valores en 0): no se borra nada.");
       return;
     }
 

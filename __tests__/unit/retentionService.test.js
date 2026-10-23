@@ -11,19 +11,31 @@ const makeDb = (registroRows = [], incidenciaRows = []) => ({
 });
 
 describe("readRetentionConfig", () => {
-  it("vacio o invalido = sin retencion (no se borra nada)", () => {
-    expect(readRetentionConfig({})).toEqual({ diasFotoRegistro: null, mesesFotoIncidencia: null });
-    expect(
-      readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "", RETENCION_MESES_FOTO_INCIDENCIA: "abc" }),
-    ).toEqual({ diasFotoRegistro: null, mesesFotoIncidencia: null });
-    expect(readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "0" }).diasFotoRegistro).toBeNull();
-    expect(readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "-5" }).diasFotoRegistro).toBeNull();
+  const DEFAULTS = { diasFotoRegistro: 90, mesesFotoIncidencia: 12 };
+
+  it("sin variables usa los valores del plan: 90 dias y 12 meses", () => {
+    expect(readRetentionConfig({})).toEqual(DEFAULTS);
   });
 
-  it("lee los valores positivos", () => {
+  it("vacio o invalido vuelve al valor por defecto", () => {
     expect(
-      readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "90", RETENCION_MESES_FOTO_INCIDENCIA: "12" }),
-    ).toEqual({ diasFotoRegistro: 90, mesesFotoIncidencia: 12 });
+      readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "", RETENCION_MESES_FOTO_INCIDENCIA: "abc" }),
+    ).toEqual(DEFAULTS);
+    expect(readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "-5" }).diasFotoRegistro).toBe(90);
+    expect(readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "1.5" }).diasFotoRegistro).toBe(90);
+  });
+
+  it("0 desactiva esa retencion", () => {
+    expect(
+      readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "0", RETENCION_MESES_FOTO_INCIDENCIA: "0" }),
+    ).toEqual({ diasFotoRegistro: null, mesesFotoIncidencia: null });
+    expect(readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "0" }).mesesFotoIncidencia).toBe(12);
+  });
+
+  it("lee otros valores positivos", () => {
+    expect(
+      readRetentionConfig({ RETENCION_DIAS_FOTO_REGISTRO: "30", RETENCION_MESES_FOTO_INCIDENCIA: "24" }),
+    ).toEqual({ diasFotoRegistro: 30, mesesFotoIncidencia: 24 });
   });
 });
 

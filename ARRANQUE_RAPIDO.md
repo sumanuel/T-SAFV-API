@@ -22,13 +22,13 @@ Ultima actualizacion: 2026-06-29
 - ACCESS_TOKEN_TTL (opcional, 24h por defecto)
 - REFRESH_TOKEN_TTL_DAYS (opcional, 30 por defecto)
 - ADJUNTO_MAX_BYTES (opcional, 3 MB por defecto: tamano maximo de una foto)
-- RETENCION_DIAS_FOTO_REGISTRO (opcional, vacio = no se borra nada)
-- RETENCION_MESES_FOTO_INCIDENCIA (opcional, vacio = no se borra nada)
+- RETENCION_DIAS_FOTO_REGISTRO (opcional, 90 por defecto; 0 = no purgar las fotos de fiscalizaciones)
+- RETENCION_MESES_FOTO_INCIDENCIA (opcional, 12 por defecto; meses tras el cierre; 0 = no purgar las de incidencias)
 
 Notas:
 
 - Tests: `npm test` corre solo los unitarios (BD simulada). `npm run test:integration` escribe en la BD real del .env.
-- Fotos: `node scripts/purgar_adjuntos.js` informa que se borraria segun la retencion; `--aplicar` borra. Pensado para el cron del hosting.
+- Fotos: `node scripts/purgar_adjuntos.js` informa que se borraria segun la retencion (valores provisionales del PLAN-002 §6); `--aplicar` borra. No hay ninguna purga automatica: solo ocurre si el cron del hosting ejecuta el script con `--aplicar`.
 
 - La conexion principal se resuelve via DATABASE_URL.
 - PGSSL es true por defecto salvo valores false-like.
